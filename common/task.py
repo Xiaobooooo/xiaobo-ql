@@ -11,8 +11,8 @@ from common.util import log, lock, load_txt, get_env
 
 class QLTask(metaclass=ABCMeta):
     def __init__(self, task_name: str, file_name: str):
-        self.success = 0
         self.wait = 0
+        self.success = 0
         self.fail_data = []
         self.task_name = task_name
         self.file_name = file_name
@@ -64,11 +64,9 @@ class QLTask(metaclass=ABCMeta):
     def statistics(self):
         """数据统计"""
         if len(self.fail_data) > 0:
-            log.info(f"-----失败数据统计-----")
-            log_data = ''
-            for fail in self.fail_data:
-                log_data += fail + '\n'
-            log.error(f'\n{log_data}')
+            log_data = '-----失败数据统计-----\n'
+            log_data += ''.join([f'{fail}\n' for fail in self.fail_data])
+            log.info(log_data)
 
     def save(self):
         """保存数据"""
@@ -76,7 +74,7 @@ class QLTask(metaclass=ABCMeta):
 
     def push_data(self):
         """推送消息"""
-        return f'总任务数：{self.total}\n成功数：{self.success}(其中时间未到数：{self.wait})\n失败数：{len(self.fail_data)}'
+        return f'总任务数：{self.total}\n成功数：{self.success} (其中时间未到数：{self.wait})\n失败数：{len(self.fail_data)}'
 
 
 ENV_THREAD_NUMBER = 'THREAD_NUMBER'

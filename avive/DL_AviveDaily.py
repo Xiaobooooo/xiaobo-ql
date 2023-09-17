@@ -15,8 +15,8 @@ from requests import Session
 from common.task import QLTask, get_proxy
 from common.util import log, log_exc, lock
 
-TASK_NAME = "Avive_每日奖励"
-FILE_NAME = "AviveToken.txt"
+TASK_NAME = 'Avive_每日奖励'
+FILE_NAME = 'AviveToken.txt'
 
 
 def get_params(mac: str, did: str, data: str = None) -> str:
@@ -31,7 +31,7 @@ def get_params(mac: str, did: str, data: str = None) -> str:
 
 def get_headers(url: str, token: str):
     timestamp = str(int(time.time()))
-    nonce = "".join(random.sample(string.ascii_letters + string.digits, 20))
+    nonce = ''.join(random.sample(string.ascii_letters + string.digits, 20))
     headers = {
         'Authorization': 'HIN ' + token,
         'Request-Sgv': '2',
@@ -40,21 +40,21 @@ def get_headers(url: str, token: str):
         'timestamp': timestamp,
         'nonce': nonce
     }
-    payload = {"url": url}
-    res = requests.post("https://xiaobooooo.com/avive/api/getHostEnv?timestamp=" + timestamp + "&nonce=" + nonce, json=payload)
+    payload = {'url': url}
+    res = requests.post('https://xiaobooooo.com/avive/api/getHostEnv?timestamp=' + timestamp + '&nonce=' + nonce, json=payload)
     if res.text.count('hostEnv'):
         host_env = res.json()['data']['hostEnv']
         sid = res.json()['data']['sid']
         sig = res.json()['data']['sig']
-        headers["Request-Sig"] = sig
-        headers["Request-Sid"] = sid
-        headers["Host-Env"] = str(host_env)
+        headers['Request-Sig'] = sig
+        headers['Request-Sid'] = sid
+        headers['Host-Env'] = str(host_env)
     return headers
 
 
 def daily(session: Session, mac: str, did: str, token: str) -> str:
-    payload = {"bonus_type": 1}
-    url = "https://api.avive.world/v1/mint/task/bonus/collect/?" + get_params(mac, did, json.dumps(payload))
+    payload = {'bonus_type': 1}
+    url = 'https://api.avive.world/v1/mint/task/bonus/collect/?' + get_params(mac, did, json.dumps(payload))
     res = session.post(url, json=payload, headers=get_headers(url, token))
     if res.text.count('code') and res.json()['code'] == 0 and res.text.count('{}'):
         return '奖励领取成功'
@@ -71,18 +71,18 @@ class Task(QLTask):
         mac = split[-3]
         did = split[-2]
         token = split[-1]
-        log.info(f"【{index}】{username}----正在完成任务")
+        log.info(f'【{index}】{username}----正在完成任务')
 
         session = requests.session()
         proxy = get_proxy(self.api_url)
         for try_num in range(self.max_retries):
-            session.proxies = {"https": proxy}
+            session.proxies = {'https': proxy}
             try:
                 result = daily(session, mac, did, token)
                 if result.count('时间未到'):
                     with lock:
                         self.wait += 1
-                log.info(f"【{index}】{username}----{result}")
+                log.info(f'【{index}】{username}----{result}')
                 return True
             except:
                 if try_num < self.max_retries - 1:

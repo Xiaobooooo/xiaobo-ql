@@ -19,9 +19,9 @@ def load_txt(file_name: str) -> list[str]:
     if not file_name.endswith('.txt'):
         file_name += '.txt'
     lines = []
-    log.info(f"正在读取{file_name}文件")
+    log.info(f"正在读取<{file_name}>文件")
     while os.path.exists(file_name) is False:
-        log.error(f"不存在{file_name}文件，3秒后重试")
+        log.error(f"不存在<{file_name}>文件，3秒后重试")
         time.sleep(3)
 
     with open(sys.path[0] + "/" + file_name, "r+") as f:
@@ -34,7 +34,7 @@ def load_txt(file_name: str) -> list[str]:
     return lines
 
 
-def write_txt(file_name: str, text: str, append: bool = True) -> bool:
+def write_txt(file_name: str, text: str, append: bool = False) -> bool:
     """
     写入文本
     :param file_name: 文本名
@@ -45,7 +45,7 @@ def write_txt(file_name: str, text: str, append: bool = True) -> bool:
     if not file_name.endswith('.txt'):
         file_name += '.txt'
     mode = 'a+' if append else 'w+'
-    log.info(f"正在写入{file_name}文件")
+    log.info(f"正在写入<{file_name}>文件")
     with lock:
         try:
             with open(sys.path[0] + '/' + file_name, mode) as f:
@@ -64,7 +64,7 @@ def del_file(file_name: str) -> bool:
     """
     if not file_name.endswith('.txt'):
         file_name += '.txt'
-    log.info(f"正在删除{file_name}文件")
+    log.info(f"正在删除<{file_name}>文件")
     if os.path.isfile(file_name):
         try:
             os.remove(file_name)  # 这个可以删除单个文件，不能删除文件夹

@@ -7,7 +7,7 @@ from requests import Session
 
 from common.task import QLTask, get_proxy
 from common.util import log, log_exc, lock
-from star.HW_StarLogin import get_error
+from HW_StarLogin import get_error
 
 TASK_NAME = 'Star_挖矿'
 FILE_NAME = 'StarNetworkToken.txt'

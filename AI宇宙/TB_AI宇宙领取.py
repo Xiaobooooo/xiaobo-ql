@@ -1,5 +1,5 @@
 """
-cron: 0 30 1/3 * * ?
+cron: 30 1/3 * * *
 new Env('AI宇宙_领取')
 """
 import requests
@@ -8,8 +8,8 @@ from requests import Session
 from common.task import QLTask, get_proxy
 from common.util import log, log_exc
 
-task_name = 'AI宇宙_领取'
-file_name = 'AI宇宙Token.txt'
+TASK_NAME = 'AI宇宙_领取'
+FILE_NAME = 'AI宇宙Token.txt'
 
 
 def query(session: Session, token: str) -> list:
@@ -64,4 +64,4 @@ class Task(QLTask):
 
 
 if __name__ == '__main__':
-    Task(task_name, file_name).run()
+    Task(TASK_NAME, FILE_NAME).run()

@@ -1,37 +1,41 @@
 """
-cron: 0 1/2 * * *
-new Env('Star_抽奖')
+cron: 0 0 * * *
+new Env('Star_练习游戏')
 """
+import random
+import time
+
 import requests
 from requests import Session
 
 from common.task import QLTask, get_proxy
-from common.util import log, log_exc, lock
+from common.util import log, log_exc
 from HW_StarLogin import get_error, encrypt
 
-TASK_NAME = 'Star_抽奖'
+TASK_NAME = 'Star_练习游戏'
 FILE_NAME = 'StarNetworkToken.txt'
 
 
-def draw(session: Session, uid: str) -> str:
-    payload = encrypt({"id": uid, "action": "draw_boost"})
-    res = session.post('https://api.starnetwork.io/v3/event/draw', json=payload)
-    if res.text.count('drawResult'):
-        result = res.json()['drawResult']
-        return f'抽奖成功: {result}'
-    if res.text.count('NOT_YET_FINISH'):
-        return f'抽奖时间未到'
+def practice(session: Session, game: str, score: str) -> str:
+    payload = encrypt({"game": game, "mode": "practice", "score": score, "extra": False}, True)
+    res = session.post('https://api.starnetwork.io/v3/game/record', json=payload)
+    if res.text.count('id'):
+        result = '获得奖励' if res.text.count('REWARDED') else '未获得奖励'
+        return f'【{game}】练习成功: {result}'
     get_error(res.text)
     msg = res.json()['message'] if res.text.count('message') else res.text
-    raise Exception(f'抽奖失败:{msg}')
+    raise Exception(f'练习失败:{msg}')
 
 
 class Task(QLTask):
     def task(self, index: int, text: str) -> bool:
         split = text.split('----')
         username = split[0]
-        uid = split[len(split) - 2]
         token = split[len(split) - 1]
+
+        delay = random.randint(1, 300)
+        log.info(f"【{index}】{username}----随机延迟{delay}秒后开始")
+        time.sleep(delay)
         log.info(f'【{index}】{username}----正在完成任务')
 
         session = requests.session()
@@ -41,14 +45,20 @@ class Task(QLTask):
         }
 
         proxy = get_proxy(self.api_url)
+
+        games = ['ballz', 'block_puzzle', 'brain_workout', 'puzzle_2048', 'sudoku', 'flappy']
         for try_num in range(self.max_retries):
             session.proxies = {'https': proxy}
             try:
-                result = draw(session, uid)
-                if result.count('时间未到'):
-                    with lock:
-                        self.wait += 1
-                log.info(f'【{index}】{username}----{result}')
+                for game in games:
+                    if game == 'flappy':
+                        score = str(random.randint(100, 200))
+                    elif game == 'puzzle_2048':
+                        score = str(random.randint(12345, 23333))
+                    else:
+                        score = str(random.randint(8888, 10000))
+                    result = practice(session, game, score)
+                    log.info(f'【{index}】{username}----{result}')
                 return True
             except:
                 if log_exc().count('账号被封禁或登录失效'):

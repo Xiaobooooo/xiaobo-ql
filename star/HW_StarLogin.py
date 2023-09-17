@@ -3,6 +3,7 @@ cron: 1 1 1 1 1
 new Env('Star_登录')
 """
 import hashlib
+import json
 import time
 
 import requests
@@ -15,12 +16,12 @@ TASK_NAME = 'Star_登录'
 FILE_NAME = 'StarNetwork.txt'
 
 
-def encrypt_hash(payload):
+def encrypt(payload, is_key: bool = False):
     timestamp = int(time.time() * 1000)
-    data = (str(payload) + ':D7C92C3FDB52D54147B668DC6F8A5@' + str(timestamp)).replace("'", '"').replace(" ", '')
+    data = json.dumps(payload).replace(' ', '') + ':D7C92C3FDB52D54147B668DC6F8A5@' + str(timestamp)
     sign = hashlib.md5(data.encode()).hexdigest()
     payload['timestamp'] = timestamp
-    payload['hash'] = sign
+    payload['key' if is_key else 'hash'] = sign
     return payload
 
 
@@ -33,7 +34,7 @@ def get_error(text):
 
 
 def login(session: Session, username: str, password: str) -> str:
-    payload = encrypt_hash({'email': username, 'password': password})
+    payload = encrypt({'email': username, 'password': password})
     res = session.post('https://api.starnetwork.io/v3/email/login_check', json=payload)
     if res.text.count('jwt'):
         if res.json()['status'] == 'blocked':

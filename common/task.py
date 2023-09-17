@@ -38,9 +38,9 @@ class QLTask(metaclass=ABCMeta):
         pool.shutdown()
         log.info(f'=====任务运行完毕=====\n')
 
-        log.info('=====开始数据统计=====')
+        log.info('=====开始统计数据=====')
         self.statistics()
-        log.info('=====统计数据完毕=====\n')
+        log.info('=====数据统计完毕=====\n')
 
         log.info('=====开始保存文本=====')
         self.save()

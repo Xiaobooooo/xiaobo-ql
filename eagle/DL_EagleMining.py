@@ -1,5 +1,5 @@
 """
-cron: 30 2/5 * * ?
+cron: 30 2/5 * * *
 new Env('Eagle_挖矿')
 """
 import requests

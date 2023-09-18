@@ -8,75 +8,6 @@ import requests
 from common.notify import send
 from common.util import log, lock, load_txt, get_env
 
-
-class QLTask(metaclass=ABCMeta):
-    def __init__(self, task_name: str, file_name: str):
-        self.wait = 0
-        self.success = 0
-        self.fail_data = []
-        self.task_name = task_name
-        self.file_name = file_name
-        log.info('=====开始加载配置=====')
-        self.lines = load_txt(self.file_name)
-        self.total = len(self.lines)
-        self.api_url = get_proxy_api(self.task_name)
-        self.thread_num = get_thread_number(self.total)
-        self.max_retries = get_max_retries()
-        log.info('=====配置加载完毕=====\n')
-
-    def run(self):
-        log.info(f'=====开始运行任务=====')
-        with futures.ThreadPoolExecutor(max_workers=self.thread_num) as pool:
-            tasks = [pool.submit(self.task, index + 1, self.lines[index].strip()) for index in range(0, self.total)]
-            futures.wait(tasks)
-            for future in futures.as_completed(tasks):
-                try:
-                    if future.result() is True:
-                        self.success += 1
-                except Exception as e:
-                    log.error(f'任务执行失败: {repr(e)}')
-        pool.shutdown()
-        log.info(f'=====任务运行完毕=====\n')
-
-        log.info('=====开始统计数据=====')
-        self.statistics()
-        log.info('=====数据统计完毕=====\n')
-
-        log.info('=====开始保存文本=====')
-        self.save()
-        log.info('=====文本保存完毕=====\n')
-
-        push_data = self.push_data()
-        if push_data is not None:
-            log.info(f'=====开始推送消息=====')
-            send(self.task_name, push_data)
-            log.info(f'=====消息推送完毕=====\n')
-
-    @abstractmethod
-    def task(self, index: int, text: str) -> bool:
-        """
-        主任务
-        :param index: 索引
-        :param text: 数据
-        :return: 任务执行结果
-        """
-
-    def statistics(self):
-        """数据统计"""
-        if len(self.fail_data) > 0:
-            log_data = '-----失败数据统计-----\n'
-            log_data += ''.join([f'{fail}\n' for fail in self.fail_data])
-            log.info(log_data)
-
-    def save(self):
-        """保存数据"""
-        pass
-
-    def push_data(self):
-        """推送消息"""
-        return f'总任务数：{self.total}\n成功数：{self.success} (其中时间未到数：{self.wait})\n失败数：{len(self.fail_data)}'
-
-
 ENV_THREAD_NUMBER = 'THREAD_NUMBER'
 ENV_PROXY_API = 'PROXY_API'
 ENV_DISABLE_PROXY = 'DISABLE_PROXY'
@@ -176,3 +107,71 @@ def get_proxy(api_url: str) -> str:
     if proxy is not None:
         log.info(f"当前代理: {proxy[7:]}")
     return proxy
+
+
+class QLTask(metaclass=ABCMeta):
+    def __init__(self, task_name: str, file_name: str):
+        self.wait = 0
+        self.success = 0
+        self.fail_data = []
+        self.task_name = task_name
+        self.file_name = file_name
+        log.info('=====开始加载配置=====')
+        self.lines = load_txt(self.file_name)
+        self.total = len(self.lines)
+        self.api_url = get_proxy_api(self.task_name)
+        self.thread_num = get_thread_number(self.total)
+        self.max_retries = get_max_retries()
+        log.info('=====配置加载完毕=====\n')
+
+    def run(self):
+        log.info(f'=====开始运行任务=====')
+        with futures.ThreadPoolExecutor(max_workers=self.thread_num) as pool:
+            tasks = [pool.submit(self.task, index + 1, self.lines[index].strip()) for index in range(0, self.total)]
+            futures.wait(tasks)
+            for future in futures.as_completed(tasks):
+                try:
+                    if future.result() is True:
+                        self.success += 1
+                except Exception as e:
+                    log.error(f'任务执行失败: {repr(e)}')
+        pool.shutdown()
+        log.info(f'=====任务运行完毕=====\n')
+
+        log.info('=====开始统计数据=====')
+        self.statistics()
+        log.info('=====数据统计完毕=====\n')
+
+        log.info('=====开始保存文本=====')
+        self.save()
+        log.info('=====文本保存完毕=====\n')
+
+        push_data = self.push_data()
+        if push_data is not None:
+            log.info(f'=====开始推送消息=====')
+            send(self.task_name, push_data)
+            log.info(f'=====消息推送完毕=====\n')
+
+    @abstractmethod
+    def task(self, index: int, text: str) -> bool:
+        """
+        主任务
+        :param index: 索引
+        :param text: 数据
+        :return: 任务执行结果
+        """
+
+    def statistics(self):
+        """数据统计"""
+        if len(self.fail_data) > 0:
+            log_data = '-----失败数据统计-----\n'
+            log_data += ''.join([f'{fail}\n' for fail in self.fail_data])
+            log.info(log_data)
+
+    def save(self):
+        """保存数据"""
+        pass
+
+    def push_data(self):
+        """推送消息"""
+        return f'总任务数：{self.total}\n成功数：{self.success} (其中时间未到数：{self.wait})\n失败数：{len(self.fail_data)}'

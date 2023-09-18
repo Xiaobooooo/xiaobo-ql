@@ -1,5 +1,5 @@
 """
-cron: 0 8 1/2 * *
+cron: 0 8 1-31/2 * *
 new Env('Avive_开启空投')
 """
 import requests

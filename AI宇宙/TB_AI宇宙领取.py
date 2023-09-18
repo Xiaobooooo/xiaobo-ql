@@ -1,5 +1,5 @@
 """
-cron: 30 1/3 * * *
+cron: 30 1-23/4 * * *
 new Env('AI宇宙_领取')
 """
 import requests

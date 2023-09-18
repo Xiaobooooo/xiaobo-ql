@@ -1,5 +1,5 @@
 """
-cron: 0 12 1/2 * *
+cron: 0 12 1-31/2 * *
 new Env('Avive_每日奖励')
 """
 import hashlib

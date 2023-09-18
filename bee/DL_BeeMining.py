@@ -1,5 +1,5 @@
 """
-cron: 30 1/6 * * *
+cron: 30 1-23/5 * * *
 new Env('Bee_挖矿')
 """
 import json

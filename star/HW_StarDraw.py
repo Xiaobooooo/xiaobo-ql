@@ -1,5 +1,5 @@
 """
-cron: 0 1/2 * * *
+cron: 0 1-23/3 * * *
 new Env('Star_抽奖')
 """
 import requests

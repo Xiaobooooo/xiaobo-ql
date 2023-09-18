@@ -1,5 +1,5 @@
 """
-cron: 0 0/2 * * *
+cron: 0 0-23/2 * * *
 new Env('Star_挖矿')
 """
 import requests

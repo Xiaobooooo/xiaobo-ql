@@ -2,6 +2,8 @@
 cron: 30 2-23/5 * * *
 new Env('Eagle_挖矿')
 """
+import time
+
 import requests
 from requests import Session
 
@@ -44,7 +46,8 @@ class Task(QLTask):
                 if result.count('时间未到'):
                     with lock:
                         self.wait += 1
-                log.info(f"【{index}】{username}----{result}")
+                log.info(f"【{index}】{username}----{result}----延迟1S后结束")
+                time.sleep(1)
                 return True
             except:
                 if try_num < self.max_retries - 1:

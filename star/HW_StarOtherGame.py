@@ -3,6 +3,7 @@ cron: 0 0 * * *
 new Env('Star_其他游戏')
 """
 import random
+import time
 
 import requests
 
@@ -39,7 +40,7 @@ class Task(QLTask):
 
         delay = random.randint(1, 300)
         log.info(f"【{index}】{username}----随机延迟{delay}秒后开始")
-        # time.sleep(delay)
+        time.sleep(delay)
         log.info(f'【{index}】{username}----正在完成任务')
 
         session = requests.session()

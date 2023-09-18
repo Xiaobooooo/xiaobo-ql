@@ -83,7 +83,7 @@ class Task(QLTask):
                     log.info(f'【{index}】{username}----账号封禁')
                     self.blocked.append(f'{text}\n')
                     return False
-                log.info(f'【{index}】{username}----登录成功')
+                log.info(f'【{index}】{username}----登录成功|开始获取ID')
                 session.headers['Authorization'] = f'Bearer {result}'
                 uid = get_uid(session)
                 self.success_email.append(f'{username}----{password}----{uid}----{result}')

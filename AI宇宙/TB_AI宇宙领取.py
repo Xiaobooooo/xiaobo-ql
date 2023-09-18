@@ -46,10 +46,8 @@ class Task(QLTask):
             session.proxies = {'https': proxy}
             try:
                 while True:
-                    log.info(f'【{index}】{username}----正在查询ID')
                     ids = query(session, token)
                     if len(ids):
-                        log.info(f'【{index}】{username}----正在领取')
                         [log.info(f'【{index}】{username}----{collect(session, token, cid)}') for cid in ids]
                     else:
                         log.info(f'【{index}】{username}----所有奖励领取完毕')

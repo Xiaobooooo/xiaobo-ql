@@ -23,9 +23,9 @@ def get_max_retries() -> int:
         try:
             return int(value)
         except Exception:
-            log.info(f'线程数设置有误，设置默认数量{max_retries}')
+            log.info(f'重试次数设置有误，设置默认数量{max_retries}')
     else:
-        log.info(f'暂未设置线程数，设置默认数量{max_retries}')
+        log.info(f'暂未设置重试次数，设置默认数量{max_retries}')
     return max_retries
 
 

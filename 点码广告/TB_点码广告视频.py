@@ -29,10 +29,9 @@ def complete_task(session: Session, uid: str) -> str:
     payload2 = {"adPlatform": "3", "adId": "1723327822", "adType": "3", "adReward": "1", "type": "Android", "viewType": 2,
                 "userId": uid, "taskType": 2}
     res = session.post(url, json=payload1)
+    res = session.post(url, json=payload2)
     if res.text.count('state') and res.json()['state'] == 200:
-        res = session.post(url, json=payload2)
-        if res.text.count('state') and res.json()['state'] == 200:
-            return '观看视频成功'
+        return '观看视频成功'
     msg = res.json()['msg'] if res.text.count('msg') else res.text
     raise Exception(f'观看视频失败:{msg}')
 

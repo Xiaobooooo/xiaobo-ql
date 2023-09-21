@@ -2,6 +2,8 @@
 cron: 0 12 * * *
 new Env('点码广告_提现')
 """
+import re
+
 import requests
 from requests import Session
 
@@ -48,9 +50,10 @@ class Task(QLTask):
             session.proxies = {'https': proxy}
             try:
                 balance = query(session)
-                log.info(f'【{index}】{username}----余额: {balance} {"进行提现" if balance >= 0.3 else "余额不足0.3，不进行提现"}')
+                log.info(f'【{index}】{username}----余额: {balance} {"进行提现" if balance >= 0.3 else "不进行提现"}')
                 if balance >= 0.3:
-                    result = withdrawal(session, '%.2f' % balance)
+                    # str(balance).
+                    result = withdrawal(session, re.findall(r"\d{1,}?\.\d{2}", str(balance))[0])
                     log.info(f'【{index}】{username}----{result}')
                     return True
                 with lock:

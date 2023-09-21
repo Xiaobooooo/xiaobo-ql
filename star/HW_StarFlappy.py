@@ -1,8 +1,9 @@
 """
-cron: 55 59 7 * * *
+cron: 59 7 * * *
 new Env('Star_Flappy游戏')
 """
 import datetime
+import time
 
 import requests
 from requests import Session
@@ -40,6 +41,9 @@ class Task(QLTask):
             with lock:
                 self.ignore += 1
             return True
+
+        log.info(f"【{index}】{username}----随机延迟50秒后开始")
+        time.sleep(50)
         log.info(f'【{index}】{username}----正在完成任务')
 
         session = requests.session()

@@ -24,11 +24,11 @@ def query_task(session: Session, uid: str) -> int:
 
 def complete_task(session: Session, uid: str) -> str:
     url = 'https://wxsq.itaoniu.com.cn/TN_WANGCAI/api/v2/yxapp/ads/addViewCount'
-    payload1 = {"adPlatform": "3", "adId": "1723327822", "adType": "3", "pageView": "1", "type": "Android", "viewType": 2,
+    payload1 = {"adPlatform": "3", "adId": "1723327821", "adType": "3", "pageView": "1", "type": "Android", "viewType": 2,
                 "userId": uid}
-    payload2 = {"adPlatform": "3", "adId": "1723327822", "adType": "3", "adReward": "1", "type": "Android", "viewType": 2,
+    payload2 = {"adPlatform": "3", "adId": "1723327821", "adType": "3", "adReward": "1", "type": "Android", "viewType": 2,
                 "userId": uid, "taskType": 2}
-    res = session.post(url, json=payload1)
+    session.post(url, json=payload1)
     res = session.post(url, json=payload2)
     if res.text.count('state') and res.json()['state'] == 200:
         return '观看视频成功'

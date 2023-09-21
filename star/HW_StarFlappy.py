@@ -42,8 +42,8 @@ class Task(QLTask):
                 self.ignore += 1
             return True
 
-        log.info(f"【{index}】{username}----随机延迟50秒后开始")
-        time.sleep(50)
+        log.info(f"【{index}】{username}----随机延迟55秒后开始")
+        time.sleep(55)
         log.info(f'【{index}】{username}----正在完成任务')
 
         session = requests.session()

@@ -10,10 +10,10 @@ cron：0 6,8,10,12 * * *
 import os
 import time
 
-from dotenv import load_dotenv
 
-load_dotenv()
+
 accounts = os.getenv("Acookie")
+# accounts = 'JSESSIONID=0AC1D9AAEDD5C024B93685FB58EF4353====JSESSIONID=66E6425DE9B5CC645FC0BDDF41882A8D====JSESSIONID=E8A419EC302242B45A78CCE53D397A66'
 
 if accounts is None:
     print('你没有填入Acookie，咋运行？')

@@ -110,12 +110,20 @@ def get_proxy(api_url: str) -> str:
 
 
 class QLTask(metaclass=ABCMeta):
-    def __init__(self, task_name: str, file_name: str):
+    def __init__(self, task_name: str, file_name: str, load_notice: bool = True):
         self.wait = 0
         self.success = 0
         self.fail_data = []
         self.task_name = task_name
         self.file_name = file_name
+        if load_notice:
+            log.info('==========公告==========')
+            try:
+                notice = requests.get('https://api.xiaobooooo.com/user/api/config/notice').json()['data']
+                log.info(f'\n{notice}')
+            except:
+                log.error('公告加载失败')
+            log.info('==========公告==========\n')
         log.info('=====开始加载配置=====')
         self.lines = load_txt(self.file_name)
         self.total = len(self.lines)
@@ -166,7 +174,7 @@ class QLTask(metaclass=ABCMeta):
         if len(self.fail_data) > 0:
             log_data = '-----失败数据统计-----\n'
             log_data += ''.join([f'{fail}\n' for fail in self.fail_data])
-            log.info(log_data)
+            log.info(log_data[:-1])
 
     def save(self):
         """保存数据"""

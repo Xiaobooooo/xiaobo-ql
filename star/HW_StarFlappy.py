@@ -28,7 +28,7 @@ def game_record(session: Session, game: str, score: str) -> str:
 
 class Task(QLTask):
     def __init__(self, task_name: str, file_name: str):
-        super().__init__(task_name, file_name)
+        super().__init__(task_name, file_name, False)
         self.ignore = 0
 
     def task(self, index: int, text: str) -> bool:

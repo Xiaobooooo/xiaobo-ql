@@ -22,7 +22,7 @@ def get_max_retries() -> int:
     if value != '':
         try:
             return int(value)
-        except Exception:
+        except:
             log.info(f'重试次数设置有误，设置默认数量{max_retries}')
     else:
         log.info(f'暂未设置重试次数，设置默认数量{max_retries}')
@@ -40,7 +40,7 @@ def get_thread_number(task_num: int) -> int:
     if value != '':
         try:
             thread_num = int(value)
-        except Exception:
+        except:
             log.info(f'线程数设置有误，设置默认数量{thread_num}')
     else:
         log.info(f'暂未设置线程数，设置默认数量{thread_num}')
@@ -97,7 +97,7 @@ def get_proxy(api_url: str) -> str:
                     else:
                         [proxies.append(f'http://{ip}') for ip in ips]
                         break
-                except Exception:
+                except:
                     if try_num < max_retries - 1:
                         log.error(f'API代理提取失败，请检查余额或是否已添加白名单，1S后第{try_num + 1}次重试')
                         time.sleep(1)

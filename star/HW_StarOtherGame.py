@@ -38,9 +38,9 @@ class Task(QLTask):
             self.fail_data.append(f'【{index}】{username}----游戏名有误，请设置ballz、block_puzzle、brain_workout、puzzle_2048、sudoku之一')
             return False
 
-        delay = random.randint(1, 300)
-        log.info(f"【{index}】{username}----随机延迟{delay}秒后开始")
-        time.sleep(delay)
+        # delay = random.randint(1, 300)
+        # log.info(f"【{index}】{username}----随机延迟{delay}秒后开始")
+        # time.sleep(delay)
         log.info(f'【{index}】{username}----正在完成任务')
 
         session = requests.session()

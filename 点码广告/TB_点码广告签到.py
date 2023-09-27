@@ -3,8 +3,8 @@ cron: 0 8 * * *
 new Env('点码广告_签到')
 """
 import hashlib
-import random
-import time
+# import random
+# import time
 
 import requests
 from requests import Session
@@ -23,8 +23,8 @@ def get_sign(data: str) -> str:
 
 def sign(session: Session, uid: str) -> str:
     url = 'https://wxsq.itaoniu.com.cn/TN_WANGCAI/api/v2/yxapp/ads/addViewCount2'
-    timestamp = int(time.time() * 1000)
-    time_check = random.randint(156666, 233333)
+    # timestamp = int(time.time() * 1000)
+    # time_check = random.randint(156666, 233333)
     payload1 = {"timestamp": 1695821746421, "sign": "2d775f80ef9b556e2b483bc2a9e17915", "adPlatform": "1",
                 "adId": "660441450537816064", "adType": "3", "adReward": "1", "type": "Android", "viewType": 1,
                 "userId": uid, "taskType": 1, "videos": 1}

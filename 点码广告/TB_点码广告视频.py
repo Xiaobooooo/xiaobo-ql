@@ -82,7 +82,7 @@ class Task(QLTask):
                     for i in range(45 - count):
                         result = complete_task(session, uid)
                         log.info(f'【{index}】{username}----{result}*{i + 1}')
-                        confirm_task(session, uid)
+                        # confirm_task(session, uid)
                 return True
             except:
                 if try_num < self.max_retries - 1:

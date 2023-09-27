@@ -3,7 +3,6 @@ cron: 0 0 * * *
 new Env('Star_其他游戏')
 """
 import random
-import time
 
 import requests
 

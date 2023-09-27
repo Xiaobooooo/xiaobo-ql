@@ -35,7 +35,8 @@ class Task(QLTask):
             return True
         if not games.count(game):
             log.info(f'【{index}】{username}----游戏名有误')
-            self.fail_data.append(f'【{index}】{username}----游戏名有误，请设置ballz、block_puzzle、brain_workout、puzzle_2048、sudoku之一')
+            self.fail_data.append(
+                f'【{index}】{username}----游戏名有误，请设置ballz、block_puzzle、brain_workout、puzzle_2048、sudoku之一')
             return False
 
         # delay = random.randint(1, 300)
@@ -54,10 +55,10 @@ class Task(QLTask):
         for try_num in range(self.max_retries):
             session.proxies = {'https': proxy}
             try:
-                if game == 'puzzle_2048':
-                    score = str(random.randint(18888, 23333))
-                else:
-                    score = str(random.randint(8888, 10000))
+                # if game == 'puzzle_2048':
+                #     score = str(random.randint(88888, 99999))
+                # else:
+                score = str(random.randint(88888, 99999))
                 result = game_record(session, game, score)
                 log.info(f'【{index}】{username}----{result}')
                 return True

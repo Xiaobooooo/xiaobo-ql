@@ -52,7 +52,8 @@ class Task(QLTask):
                 balance = query(session)
                 log.info(f'【{index}】{username}----余额: {balance} {"进行提现" if balance >= 0.3 else "不进行提现"}')
                 if balance >= 0.3:
-                    # str(balance).
+                    if balance >= 10:
+                        balance = 10
                     result = withdrawal(session, re.findall(r"\d{1,}?\.\d{2}", str(balance))[0])
                     log.info(f'【{index}】{username}----{result}')
                     return True

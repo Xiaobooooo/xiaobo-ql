@@ -2,11 +2,14 @@
 cron: 0 10 * * *
 new Env('点码广告_看视频')
 """
+import time
+
 import requests
 from requests import Session
 
 from common.task import QLTask, get_proxy
 from common.util import log, log_exc, lock
+from 点码广告.TB_点码广告签到 import get_sign
 
 TASK_NAME = '点码广告_看视频'
 FILE_NAME = '点码广告Token.txt'
@@ -22,18 +25,35 @@ def query_task(session: Session, uid: str) -> int:
     raise Exception(f'任务次数查询失败:{msg}')
 
 
+def query_complete_task(session: Session, uid: str) -> str:
+    url = 'https://wxsq.itaoniu.com.cn/TN_WANGCAI/api/v2/yxapp/ads/getEverydayTaskCount'
+    payload = {"userId": uid, "timestamp": 1695830719771, "sign": "5d28885804ce490372dfce906502eeff"}
+    res = session.post(url, json=payload)
+    if res.text.count('state') and res.json()['state'] == 200:
+        return res.json()['body']
+    msg = res.json()['msg'] if res.text.count('msg') else res.text
+    raise Exception(f'未结算数量查询失败:{msg}')
+
+
 def complete_task(session: Session, uid: str) -> str:
-    url = 'https://wxsq.itaoniu.com.cn/TN_WANGCAI/api/v2/yxapp/ads/addViewCount'
-    payload1 = {"adPlatform": "3", "adId": "1723327821", "adType": "3", "pageView": "1", "type": "Android", "viewType": 2,
-                "userId": uid}
-    payload2 = {"adPlatform": "3", "adId": "1723327821", "adType": "3", "adReward": "1", "type": "Android", "viewType": 2,
-                "userId": uid, "taskType": 2}
-    session.post(url, json=payload1)
-    res = session.post(url, json=payload2)
+    url = 'https://wxsq.itaoniu.com.cn/TN_WANGCAI/api/v2/yxapp/ads/addEverydayTaskCount'
+    payload = {"userId": uid, "timestamp": 1695823113581, "sign": "d7b66b0552d37df3c6980ad4c42caac1"}
+    res = session.post(url, json=payload)
     if res.text.count('state') and res.json()['state'] == 200:
         return '观看视频成功'
     msg = res.json()['msg'] if res.text.count('msg') else res.text
     raise Exception(f'观看视频失败:{msg}')
+
+
+def confirm_task(session: Session, uid: str) -> str:
+    url = 'https://wxsq.itaoniu.com.cn/TN_WANGCAI/api/v2/yxapp/ads/addEverydayTask'
+    timestamp = int(time.time() * 1000)
+    payload = {"tasks": 1, "type": "Android", "userId": uid, "timestamp": timestamp, "sign": get_sign(f"Android{timestamp}")}
+    res = session.post(url, json=payload)
+    if res.text.count('state') and res.json()['state'] == 200:
+        return '任务结算成功'
+    msg = res.json()['msg'] if res.text.count('msg') else res.text
+    raise Exception(f'任务结算失败:{msg}')
 
 
 class Task(QLTask):
@@ -58,10 +78,12 @@ class Task(QLTask):
                     count = query_task(session, uid)
                     log.info(f'【{index}】{username}----今日已观看: {count} 剩余次数: {45 - count}')
                     if count == 45:
-                        return True
+                        break
                     for i in range(45 - count):
                         result = complete_task(session, uid)
                         log.info(f'【{index}】{username}----{result}*{i + 1}')
+                        confirm_task(session, uid)
+                return True
             except:
                 if try_num < self.max_retries - 1:
                     log.error(f'【{index}】{username}----进行第{try_num + 1}次重试----{log_exc()}')

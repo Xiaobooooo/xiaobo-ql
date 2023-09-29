@@ -119,7 +119,7 @@ class QLTask(metaclass=ABCMeta):
         if load_notice:
             log.info('==========公告==========')
             try:
-                notice = requests.get('https://static.xiaobooooo.com/text/notice.txt').text
+                notice = requests.get('https://static.xiaobooooo.com/text/notice').text
                 log.info(f'\n{notice}')
             except:
                 log.error('公告加载失败')

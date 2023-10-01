@@ -3,6 +3,7 @@ cron: 0 10 * * *
 new Env('点码广告_看视频')
 """
 import time
+from concurrent import futures
 
 import requests
 from requests import Session
@@ -37,24 +38,27 @@ def query_complete_task(session: Session, uid: str) -> str:
 
 def complete_task(session: Session, uid: str) -> str:
     url = 'https://wxsq.itaoniu.com.cn/TN_WANGCAI/api/v2/yxapp/ads/addEverydayTaskCount'
-    payload = {"userId": uid, "timestamp": 1695823113581, "sign": "d7b66b0552d37df3c6980ad4c42caac1"}
+    timestamp = int(time.time() * 1000)
+    payload = {"userId": uid, "timestamp": timestamp, "sign": get_sign(f'{uid}_AndroidCount{timestamp}')}
     res = session.post(url, json=payload)
     if res.text.count('state') and res.json()['state'] == 200:
         return '观看视频成功'
+    if res.text.count('您的访问被阻断'):
+        return '访问被阻断'
     msg = res.json()['msg'] if res.text.count('msg') else res.text
     raise Exception(f'观看视频失败:{msg}')
 
 
-def confirm_task(session: Session, uid: str) -> str:
+def confirm_task(session: Session, uid: str, count: int) -> str:
     url = 'https://wxsq.itaoniu.com.cn/TN_WANGCAI/api/v2/yxapp/ads/addEverydayTask'
     timestamp = int(time.time() * 1000)
-    payload = {"tasks": 1, "type": "Android", "userId": uid, "timestamp": timestamp, "sign": get_sign(f"Android{timestamp}")}
+    payload = {"tasks": count, "type": "Android", "userId": uid, "timestamp": timestamp,
+               "sign": get_sign(f'{uid}_Android{timestamp}')}
     res = session.post(url, json=payload)
     if res.text.count('state') and res.json()['state'] == 200:
         return '任务结算成功'
     msg = res.json()['msg'] if res.text.count('msg') else res.text
     raise Exception(f'任务结算失败:{msg}')
-
 
 class Task(QLTask):
     def task(self, index: int, text: str) -> bool:
@@ -81,12 +85,29 @@ class Task(QLTask):
                         break
                     for i in range(45 - count):
                         result = complete_task(session, uid)
+                        if result.count('访问被阻断'):
+                            proxy = get_proxy(self.api_url)
+                            session.proxies = {'https': proxy}
                         log.info(f'【{index}】{username}----{result}*{i + 1}')
-                        # confirm_task(session, uid)
+                    time.sleep(5)
+                    count = query_complete_task(session, uid)
+                    log.info(f'【{index}】{username}----未结算数量: {count}')
+                    # confirm_task(session, uid, int(count))
+                    self.thread_num_r = 5
+                    with futures.ThreadPoolExecutor(max_workers=self.thread_num_r) as pool:
+                        tasks = [pool.submit(confirm_task, session, uid, int(count)) for i in range(0, self.thread_num_r)]
+                        futures.wait(tasks)
+                        for future in futures.as_completed(tasks):
+                            try:
+                                log.info(f'【{index}】{username}----{future.result()}')
+                            except:
+                                log.info(f'【{index}】{username}----{log_exc()}')
+                    pool.shutdown()
                 return True
-            except:
+            except Exception as e:
                 if try_num < self.max_retries - 1:
                     log.error(f'【{index}】{username}----进行第{try_num + 1}次重试----{log_exc()}')
+                    proxy = get_proxy(self.api_url)
                 else:
                     log.error(f'【{index}】{username}----重试完毕----{log_exc()}')
                     self.fail_data.append(f'【{index}】{username}----{log_exc()}')

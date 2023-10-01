@@ -9,8 +9,8 @@ import requests
 from requests import Session
 
 from common.task import QLTask, get_proxy
-from common.util import log, log_exc, lock
-from 点码广告.TB_点码广告签到 import get_sign
+from common.util import log, log_exc
+from TB_点码广告签到 import get_sign
 
 TASK_NAME = '点码广告_看视频'
 FILE_NAME = '点码广告Token.txt'

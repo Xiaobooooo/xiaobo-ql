@@ -28,6 +28,8 @@ def withdrawal(session: Session, money: str) -> str:
     res = session.post(url, json=payload)
     if res.text.count('state') and res.json()['state'] == 200:
         return '提现成功'
+    if res.text.count('超过日提现最高额度') or res.text.count('商户单日转账额度'):
+        return res.json()['msg']
     msg = res.json()['msg'] if res.text.count('msg') else res.text
     raise Exception(f'提现失败:{msg}')
 

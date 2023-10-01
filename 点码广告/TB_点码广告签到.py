@@ -6,9 +6,6 @@ import hashlib
 import random
 import time
 
-# import random
-# import time
-
 import requests
 from requests import Session
 

@@ -93,16 +93,16 @@ class Task(QLTask):
                     time.sleep(5)
                     count = query_complete_task(session, uid)
                     log.info(f'【{index}】{username}----未结算数量: {count}')
-                    confirm_task(session, uid, int(count))
-                    # self.thread_num_r = 5
-                    # with futures.ThreadPoolExecutor(max_workers=self.thread_num_r) as pool:
-                    #     tasks = [pool.submit(confirm_task, session, uid, int(count)) for i in range(0, self.thread_num_r)]
-                    #     futures.wait(tasks)
-                    #     for future in futures.as_completed(tasks):
-                    #         try:
-                    #             log.info(f'【{index}】{username}----{future.result()}')
-                    #         except:
-                    #             log.info(f'【{index}】{username}----{log_exc()}')
+                    # confirm_task(session, uid, int(count))
+                    self.thread_num_r = 5
+                    with futures.ThreadPoolExecutor(max_workers=self.thread_num_r) as pool:
+                        tasks = [pool.submit(confirm_task, session, uid, int(count)) for i in range(0, self.thread_num_r)]
+                        futures.wait(tasks)
+                        for future in futures.as_completed(tasks):
+                            try:
+                                log.info(f'【{index}】{username}----{future.result()}')
+                            except:
+                                log.info(f'【{index}】{username}----{log_exc()}')
                     pool.shutdown()
                 return True
             except Exception as e:

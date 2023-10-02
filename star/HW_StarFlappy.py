@@ -34,15 +34,15 @@ class Task(QLTask):
     def task(self, index: int, text: str) -> bool:
         split = text.split('----')
         username = split[0]
-        game = split[len(split) - 2]
-        token = split[len(split) - 1]
+        game = split[-2]
+        token = split[-1]
         if game != 'flappy':
             log.info(f'【{index}】{username}----不完成此任务')
             with lock:
                 self.ignore += 1
             return True
 
-        log.info(f"【{index}】{username}----随机延迟55秒后开始")
+        log.info(f"【{index}】{username}----延迟55秒后开始")
         time.sleep(55)
         log.info(f'【{index}】{username}----正在完成任务')
 
@@ -75,6 +75,7 @@ class Task(QLTask):
                     return False
                 if try_num < self.max_retries - 1:
                     log.error(f'【{index}】{username}----进行第{try_num + 1}次重试----{log_exc()}')
+                    proxy = get_proxy(self.api_url)
                 else:
                     log.error(f'【{index}】{username}----重试完毕----{log_exc()}')
                     self.fail_data.append(f'【{index}】{username}----{log_exc()}')

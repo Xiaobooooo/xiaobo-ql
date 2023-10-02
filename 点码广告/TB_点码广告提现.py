@@ -28,7 +28,7 @@ def withdrawal(session: Session, money: str) -> str:
     res = session.post(url, json=payload)
     if res.text.count('state') and res.json()['state'] == 200:
         return '提现成功'
-    if res.text.count('超过日提现最高额度') or res.text.count('商户单日转账额度'):
+    if res.text.count('超过日提现最高额度') or res.text.count('商户单日转账额度') or res.text.count('无效TOKEN,请重新登录'):
         return res.json()['msg']
     msg = res.json()['msg'] if res.text.count('msg') else res.text
     raise Exception(f'提现失败:{msg}')
@@ -54,8 +54,8 @@ class Task(QLTask):
                 balance = query(session)
                 log.info(f'【{index}】{username}----余额: {balance} {"进行提现" if balance >= 0.3 else "不进行提现"}')
                 if balance >= 0.3:
-                    if balance >= 10:
-                        balance = 10.001
+                    # if balance >= 10:
+                    #     balance = 10.001
                     result = withdrawal(session, re.findall(r"\d{1,}?\.\d{2}", str(balance))[0])
                     log.info(f'【{index}】{username}----{result}')
                     return True
@@ -65,6 +65,7 @@ class Task(QLTask):
             except:
                 if try_num < self.max_retries - 1:
                     log.error(f'【{index}】{username}----进行第{try_num + 1}次重试----{log_exc()}')
+                    proxy = get_proxy(self.api_url)
                 else:
                     log.error(f'【{index}】{username}----重试完毕----{log_exc()}')
                     self.fail_data.append(f'【{index}】{username}----{log_exc()}')

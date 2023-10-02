@@ -22,8 +22,8 @@ class Task(QLTask):
     def task(self, index: int, text: str) -> bool:
         split = text.split('----')
         username = split[0]
-        game = split[len(split) - 2]
-        token = split[len(split) - 1]
+        game = split[-2]
+        token = split[-1]
 
         games = ['ballz', 'block_puzzle', 'brain_workout', 'puzzle_2048', 'sudoku']
 
@@ -67,6 +67,7 @@ class Task(QLTask):
                     return False
                 if try_num < self.max_retries - 1:
                     log.error(f'【{index}】{username}----进行第{try_num + 1}次重试----{log_exc()}')
+                    proxy = get_proxy(self.api_url)
                 else:
                     log.error(f'【{index}】{username}----重试完毕----{log_exc()}')
                     self.fail_data.append(f'【{index}】{username}----{log_exc()}')

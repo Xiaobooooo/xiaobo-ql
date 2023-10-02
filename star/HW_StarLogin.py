@@ -94,6 +94,7 @@ class Task(QLTask):
                     return False
                 if try_num < self.max_retries - 1:
                     log.error(f'【{index}】{username}----进行第{try_num + 1}次重试----{log_exc()}')
+                    proxy = get_proxy(self.api_url)
                 else:
                     log.error(f'【{index}】{username}----重试完毕----{log_exc()}')
                     self.fail_data.append(f'【{index}】{username}----{password}----{log_exc()}')

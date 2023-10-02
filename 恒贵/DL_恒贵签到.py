@@ -65,7 +65,7 @@ class Task(QLTask):
     def task(self, index: int, text: str) -> bool:
         split = text.split('----')
         username = split[0]
-        token = split[len(split) - 1]
+        token = split[-1]
         log.info(f'【{index}】{username}----正在完成任务')
 
         proxy = get_proxy(self.api_url)

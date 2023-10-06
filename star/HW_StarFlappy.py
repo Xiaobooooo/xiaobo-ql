@@ -16,11 +16,13 @@ TASK_NAME = 'Star_Flappy游戏'
 FILE_NAME = 'StarNetworkGameToken.txt'
 
 
-def game_record(session: Session, game: str, score: str) -> str:
-    payload = encrypt({"game": game, "mode": "tournament", "score": score, "extra": False}, True)
+def game_record(session: Session) -> str:
+    payload = encrypt({"game": 'flappy', "mode": "tournament", "score": '200', "extra": False}, True)
     res = session.post('https://api.starnetwork.io/v3/game/record', json=payload)
     if res.text.count('id') and res.text.count('SAVED'):
         return '完成游戏成功'
+    if res.text.count('Service Unavailable'):
+        return res.text
     get_error(res.text)
     msg = res.json()['message'] if res.text.count('message') else res.text
     raise Exception(f'游戏完成失败:{msg}')
@@ -42,8 +44,8 @@ class Task(QLTask):
                 self.ignore += 1
             return True
 
-        log.info(f"【{index}】{username}----延迟55秒后开始")
-        time.sleep(55)
+        # log.info(f"【{index}】{username}----延迟55秒后开始")
+        # time.sleep(55)
         log.info(f'【{index}】{username}----正在完成任务')
 
         session = requests.session()
@@ -56,15 +58,16 @@ class Task(QLTask):
         for try_num in range(self.max_retries):
             session.proxies = {'https': proxy}
             try:
-                score = '200'
                 second = float(datetime.datetime.now().strftime('%S.%f'))
-                if second > 55 or second < 10:
-                    result = game_record(session, game, score)
+                if second >= 55 or second <= 10:
+                    result = game_record(session)
                     log.info(f'【{index}】{username}----{result}')
                 else:
                     success = 0
-                    while success < 1:
-                        result = game_record(session, game, score)
+                    run = 0
+                    while success < 1 or run > 50:
+                        run += 1
+                        result = game_record(session)
                         if result == '完成游戏成功':
                             success += 1
                         log.info(f'【{index}】{username}----{result}')

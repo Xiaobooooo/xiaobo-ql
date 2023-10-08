@@ -57,7 +57,7 @@ class Task(QLTask):
                 # if game == 'puzzle_2048':
                 #     score = str(random.randint(88888, 99999))
                 # else:
-                score = str(random.randint(88888, 99999))
+                score = str(random.randint(2333, 9999))
                 result = game_record(session, game, score)
                 log.info(f'【{index}】{username}----{result}')
                 return True

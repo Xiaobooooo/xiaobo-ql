@@ -16,8 +16,8 @@ TASK_NAME = 'Star_Flappy游戏'
 FILE_NAME = 'StarNetworkGameToken.txt'
 
 
-def game_record(session: Session) -> str:
-    payload = encrypt({"game": 'flappy', "mode": "tournament", "score": '200', "extra": False}, True)
+def game_record(session: Session, game: str, score: str) -> str:
+    payload = encrypt({"game": game, "mode": "tournament", "score": score, "extra": False}, True)
     res = session.post('https://api.starnetwork.io/v3/game/record', json=payload)
     if res.text.count('id') and res.text.count('SAVED'):
         return '完成游戏成功'
@@ -67,7 +67,7 @@ class Task(QLTask):
                     run = 0
                     while success < 1 or run > 50:
                         run += 1
-                        result = game_record(session)
+                        result = game_record(session, game, '200')
                         if result == '完成游戏成功':
                             success += 1
                         log.info(f'【{index}】{username}----{result}')

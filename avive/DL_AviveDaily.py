@@ -41,7 +41,7 @@ def get_headers(url: str, token: str):
         'nonce': nonce
     }
     payload = {'url': url}
-    res = requests.post('https://xiaobooooo.com/avive/api/getHostEnv?timestamp=' + timestamp + '&nonce=' + nonce, json=payload)
+    res = requests.post('https://api.xiaobooooo.com/avive/api/getHostEnv?timestamp=' + timestamp + '&nonce=' + nonce, json=payload)
     if res.text.count('hostEnv'):
         host_env = res.json()['data']['hostEnv']
         sid = res.json()['data']['sid']

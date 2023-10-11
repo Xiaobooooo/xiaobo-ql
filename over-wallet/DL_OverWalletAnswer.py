@@ -19,7 +19,6 @@ def answer(session: Session) -> str:
     global quiz_id, answer_id
     if quiz_id == '':
         res = session.get('https://mover-api-prod.over.network/mission/3/info')
-        log.info(res.text)
         if res.text.count('quiz_id'):
             quiz_id = res.json()['data']['quiz_id']
         else:
@@ -31,7 +30,6 @@ def answer(session: Session) -> str:
             ans = f'{i + 1}'
             payload = {"answer_list": [ans]}
             res = session.post(f'https://mover-api-prod.over.network/mission/3/quiz/{quiz_id}/submit', json=payload)
-            log.info(res.text)
             if res.text.count('reward') and res.json()['data']['reward'] is not None:
                 answer_id = ans
                 reward = res.json()['data']['reward']
@@ -39,7 +37,6 @@ def answer(session: Session) -> str:
     else:
         payload = {"answer_list": [answer_id]}
         res = session.post(f'https://mover-api-prod.over.network/mission/3/quiz/{quiz_id}/submit', json=payload)
-        log.info(res.text)
         if res.text.count('reward') and res.json()['data']['reward'] is not None:
             reward = res.json()['data']['reward']
             return f'答题成功: {reward}'

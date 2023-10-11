@@ -11,14 +11,38 @@ from common.util import log, log_exc, lock
 TASK_NAME = 'OverWallet_答题'
 FILE_NAME = 'OverWalletToken.txt'
 
+quiz_id = ''
+answer_id = ''
+
 
 def answer(session: Session) -> str:
-    payload = {"answer_list": ["3"]}
-    session.get('https://mover-api-prod.over.network/mission/3/quiz/861/start', json=payload)
-    res = session.post('https://mover-api-prod.over.network/mission/3/quiz/861/submit', json=payload)
-    if res.text.count('reward'):
-        reward = res.json()['data']['reward']
-        return f'答题成功: {reward}'
+    global quiz_id, answer_id
+    if quiz_id == '':
+        res = session.get('https://mover-api-prod.over.network/mission/3/info')
+        log.info(res.text)
+        if res.text.count('quiz_id'):
+            quiz_id = res.json()['data']['quiz_id']
+        else:
+            msg = res.json()['msg'] if res.text.count('msg') else res.text
+            raise Exception(f'ID查询失败:{msg}')
+    res = None
+    if answer_id == '':
+        for i in range(3):
+            ans = f'{i + 1}'
+            payload = {"answer_list": [ans]}
+            res = session.post(f'https://mover-api-prod.over.network/mission/3/quiz/{quiz_id}/submit', json=payload)
+            log.info(res.text)
+            if res.text.count('reward') and res.json()['data']['reward'] is not None:
+                answer_id = ans
+                reward = res.json()['data']['reward']
+                return f'答题成功: {reward}'
+    else:
+        payload = {"answer_list": [answer_id]}
+        res = session.post(f'https://mover-api-prod.over.network/mission/3/quiz/{quiz_id}/submit', json=payload)
+        log.info(res.text)
+        if res.text.count('reward') and res.json()['data']['reward'] is not None:
+            reward = res.json()['data']['reward']
+            return f'答题成功: {reward}'
     if res.text.count('code') and (res.json()['code'] == -14 or res.json()['code'] == -26):
         return '答题时间未到'
     msg = res.json()['msg'] if res.text.count('msg') else res.text

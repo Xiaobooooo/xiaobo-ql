@@ -60,7 +60,7 @@ class Task(QLTask):
             try:
                 second = float(datetime.datetime.now().strftime('%S.%f'))
                 if second >= 55 or second <= 10:
-                    result = game_record(session)
+                    result = game_record(session, game, '200')
                     log.info(f'【{index}】{username}----{result}')
                 else:
                     success = 0

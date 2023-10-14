@@ -65,7 +65,7 @@ class Task(QLTask):
                 else:
                     success = 0
                     run = 0
-                    while success < 1 and run < 50:
+                    while success < 1 and run < 20:
                         run += 1
                         result = game_record(session, game, '200')
                         if result == '完成游戏成功':

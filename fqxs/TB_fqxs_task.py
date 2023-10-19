@@ -809,8 +809,8 @@ if __name__ == "__main__":
     if count > len(user_list):
         count = len(user_list)
     for i in range(count):
-        proxy = get_proxy(API_URL)
         log.info(f"=========开始第{i + 1}个账号=========")
+        proxy = get_proxy(API_URL)
         user_json = Tomato(proxy, log, user_cookies[i]).run(user_list[i])
         new_user_list.append(user_json)
     write_file(TOMATO_READ_JSON, new_user_list)

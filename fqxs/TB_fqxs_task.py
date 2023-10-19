@@ -134,8 +134,7 @@ class Tomato(object):
         res = self.session.get(url).json()
         if res["err_no"] == 0:
             score_balance = res["data"]["take_cash_info"]["income_data"]["score_balance"]
-            cash_balance = str(res["data"]["take_cash_info"]["income_data"]["cash_balance"] * 0.01)
-            cash_balance = re.findall(r"\d{1,}?\.\d{2}", cash_balance)[0]
+            cash_balance = res["data"]["take_cash_info"]["income_data"]["cash_balance"] * 0.01
             self.log.info(f'当前金币: {score_balance}   现金: {cash_balance}元')
         else:
             self.log.info(f'当前金币: 查询失败   现金: 查询失败')

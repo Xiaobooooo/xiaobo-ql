@@ -2,17 +2,19 @@
 cron: 3-59/10 * * * *
 new Env('FQXS_TASK')
 """
-import logging
 import os
 import random
 import re
+import ssl
 import threading
 import time
 from concurrent import futures
 
 import requests
+from requests.adapters import HTTPAdapter, PoolManager
 
 from TB_fqxs_init import write_file, load_file, log
+from common.util import log_exc
 
 DELAY_MINUTES = 10  # 10分钟一次
 EXEC_READ = 1
@@ -23,6 +25,8 @@ TASK_NAME = 'tomato_read'
 
 ENV_PROXY_API = 'PROXY_API'
 ENV_DISABLE_PROXY = 'DISABLE_PROXY'
+
+NEW_USER_JSON = []
 
 lock = threading.RLock()
 proxies = []
@@ -114,6 +118,7 @@ class Tomato(object):
         self.passport_sdk_version = cookies.split("#")[5]
         self.params = re.findall('\?(.*?)$', self.task_url)[0]
         self.session = requests.session()
+        self.session.mount('https://', MyAdapter())
         self.session.headers = {
             'User-Agent': self.ua,
             'sdk-version': self.sdk_version,
@@ -145,14 +150,14 @@ class Tomato(object):
         log.info('------------[repeat]获取广告信息如下------------')
         err = res.get('err_tips')
         amount = res.get('data').get('score_amount')
-        log.info(f'【状态】: {err}!\n【预计奖励】: {amount}金币')
+        log.info(f'【状态】: {err}!   【预计奖励】: {amount}金币')
         log.info('-----------------------')
         return res
 
     def page(self, task_key):
         url = f'https://api3-normal-hl.fqnovel.com/luckycat/novel/v1/task/{task_key}?' + self.params
-        res = self.session.get(url).text
-        log.info(res)
+        res = self.session.get(url).json()
+        # log.info(res)
 
     # 宝箱任务
     def treasure_task(self, task_key):
@@ -252,7 +257,7 @@ class Tomato(object):
 
     def daily_watch_short_video(self, short_video_task_key):
         self.get_ad_info('get_ad_info')
-        time.sleep(random.uniform(6, 10))
+        # time.sleep(random.uniform(6, 10))
         url = 'https://api5-normal-hl.fqnovel.com/luckycat/novel/v1/task/done/daily_watch_short_video?' + self.params
         payload = {"short_video_task_key": short_video_task_key}
         res = self.session.post(url, json=payload).json()
@@ -277,7 +282,6 @@ class Tomato(object):
             url = f'https://api3-normal-hl.fqnovel.com/luckycat/novel/v1/task/done/{task_key}?' + self.params
             payload = {"action": "withdraw"}
             res = self.session.post(url, json=payload).json()
-            # log.info(res)
             tip = re.findall('daily_(.*?)_', task_key)[0]
             if res.get('err_no') == 0:
                 amount = res.get('data').get('amount')
@@ -314,7 +318,6 @@ class Tomato(object):
         url = f'https://api3-normal-hl.fqnovel.com/luckycat/novel/v1/task/done/{task_key}?' + self.params
         payload = {"meal_type": meal_type, "task_key": task_key}
         res = self.session.post(url, json=payload).json()
-        # log.info(res)
         if res.get('err_no') == 0:
             amount = res.get('data').get('amount')
             log.info(f'【吃饭】获得{amount}金币')
@@ -350,7 +353,7 @@ class Tomato(object):
 
     # 浏览商品赚钱 60秒
     def browse_products(self, task_key):
-        time.sleep(random.uniform(6, 10))
+        # time.sleep(random.uniform(6, 10))
         url = f'https://api3-normal-hl.fqnovel.com/luckycat/novel/v1/task/done/{task_key}?' + self.params
         payload = {"task_key": task_key}
         res = self.session.post(url, json=payload).json()
@@ -391,7 +394,6 @@ class Tomato(object):
             url = f'https://api3-normal-hl.fqnovel.com/luckycat/novel/v1/task/done/{task_key}?' + self.params
             payload = {"done_type": done_type, "task_key": task_key}
             res = self.session.post(url, json=payload).json()
-            log.info(res)
             if res.get('err_no') == 0:
                 log.info('【去睡觉】')
                 # self.excitation_ad_repeat('excitation_ad_repeat')
@@ -406,7 +408,7 @@ class Tomato(object):
             url = f'https://api3-normal-hl.fqnovel.com/luckycat/novel/v1/task/done/{task_key}?' + self.params
             payload = {"done_type": done_type, "task_key": task_key}
             res = self.session.post(url, json=payload).json()
-            log.info(res)
+            # log.info(res)
             if 'err_no' in res:
                 if res.get('err_no') == 10007:
                     return 0
@@ -461,7 +463,7 @@ class Tomato(object):
                 amount = res.get('data').get('amount')
                 log.info(f'【看漫画】获得{amount}金币')
                 self.amount += amount
-                # self.excitation_ad_repeat('excitation_ad_repeat')
+                self.excitation_ad_repeat('excitation_ad_repeat')
                 return 1
             else:
                 log.info('【看漫画】' + res.get('err_tips'))
@@ -510,7 +512,7 @@ class Tomato(object):
             # time.sleep(random.uniform(5, 10))
             res = self.session.get(url).json()
             if res.get('err_no') == 0:
-                log.info(res)
+                # log.info(res)
                 self.lottery_cnt = res.get('data').get('can_lottery_times')
             else:
                 log.info('【查询抽奖页面】' + res.get('err_tips'))
@@ -527,7 +529,7 @@ class Tomato(object):
                     task_id = task_data.get('task_id')
                     chance_time = task_data.get('chance_times')
                     taskId[task_id] = chance_time
-                log.info('返回taskId success')
+                # log.info('返回taskId success')
                 self.taskId = taskId
             else:
                 log.info('【查询抽奖页面】' + res.get('err_tips'))
@@ -555,7 +557,7 @@ class Tomato(object):
                     amount = res.get('data').get('reward').get('amount')
                     log.info(f'【抽奖】获得{amount}')
                     self.amount += amount
-                    # time.sleep(random.uniform(2, 3))
+                    # time.sleep(random.uniform(3, 5))
                 else:
                     log.info('【抽奖】' + res.get('err_tips'))
 
@@ -573,7 +575,8 @@ class Tomato(object):
 
     def run(self, index, api, user_data) -> dict:
         log.info(f"=========开始第{index + 1}个账号=========")
-        self.session.proxies = {'https': get_proxy(api)}
+        if api != '' and api is not None:
+            self.session.proxies = {'https': get_proxy(api)}
         # 查询
         name = user_data.get('name')
         amount = user_data.get('amount')
@@ -644,7 +647,7 @@ class Tomato(object):
                 if self.sleep('sleep'):
                     sleep_finished = 'end_sleep'
 
-                # 需要完成去睡觉
+            # 需要完成去睡觉
             elif sleep_finished == 'end_sleep' and '22:00:00' <= current_time <= '23:45:00':
                 log.info('需要完成去睡觉')
                 if self.sleep('sleep'):
@@ -665,7 +668,6 @@ class Tomato(object):
                 else:
                     key_time = meal_judge.get(meal_finished + 1)
                 # key和time是否对应
-
                 start_time = re.findall('^(.*?)-', key_time)[0]
                 end_time = re.findall('-(.*?)$', key_time)[0]
                 if start_time <= current_time <= end_time:
@@ -678,56 +680,51 @@ class Tomato(object):
                     read_id = [0.5, 2, 5, 10, 30, 60, 120, 180]
                     if next_readNovel != -1:
                         read_start = read_id.index(next_readNovel)
-                        # for rid in range(len(read_id) - read_start):
-                        if read_id[read_start] == 0.5:
-
-                            read_minute = '30s_once'
-                            key = 'daily_read_' + read_minute
-                            if EXCITATION_AD_READ_GAIN_MODE:
-                                self.excitation_ad_read_gain(key)
-                                # time.sleep(random.uniform(5, 10))
-                            read_start += self.task_read(key)
-                        else:
-                            read_minute = f'{read_id[read_start]}m'
-                            key = f'daily_read_{read_minute}'
-                            if EXCITATION_AD_READ_GAIN_MODE:
-                                self.excitation_ad_read_gain(key)
-                                # time.sleep(random.uniform(5, 10))
-                            read_start += self.task_read(key)
-                        if read_start <= len(read_id) - 1:
-                            next_readNovel = read_id[read_start]
-                        else:
-                            next_readNovel = -1
-
-                    # 听书
-                    # log.info(f'听书本次：{next_listenNoval}')
+                        for rid in range(len(read_id) - read_start):
+                            if read_id[read_start] == 0.5:
+                                read_minute = '30s_once'
+                                key = 'daily_read_' + read_minute
+                                if EXCITATION_AD_READ_GAIN_MODE:
+                                    self.excitation_ad_read_gain(key)
+                                    # time.sleep(random.uniform(5, 10))
+                                read_start += self.task_read(key)
+                            else:
+                                read_minute = f'{read_id[read_start]}m'
+                                key = f'daily_read_{read_minute}'
+                                if EXCITATION_AD_READ_GAIN_MODE:
+                                    self.excitation_ad_read_gain(key)
+                                    # time.sleep(random.uniform(5, 10))
+                                read_start += self.task_read(key)
+                            if read_start <= len(read_id) - 1:
+                                next_readNovel = read_id[read_start]
+                            else:
+                                next_readNovel = -1
+                # 听书
+                # log.info(f'听书本次：{next_listenNoval}')
                 if current_time > '17:00:00':
                     listen_id = [0.5, 2, 5, 10, 30, 60, 120, 180]
                     if next_listenNoval != -1:
                         listen_start = listen_id.index(next_listenNoval)
-                        # for lid in range(len(listen_id) - listen_start):
-                        if listen_id[listen_start] == 0.5:
-                            listen_minute = '30s'
-                        else:
-                            listen_minute = f'{listen_id[listen_start]}m'
-                        listen_start += self.task_read('daily_listen_' + listen_minute)
-                        if listen_start <= len(listen_id) - 1:
-                            next_listenNoval = listen_id[listen_start]
-                        else:
-                            next_listenNoval = -1
-
+                        for lid in range(len(listen_id) - listen_start):
+                            if listen_id[listen_start] == 0.5:
+                                listen_minute = '30s'
+                            else:
+                                listen_minute = f'{listen_id[listen_start]}m'
+                            listen_start += self.task_read('daily_listen_' + listen_minute)
+                            if listen_start <= len(listen_id) - 1:
+                                next_listenNoval = listen_id[listen_start]
+                            else:
+                                next_listenNoval = -1
                 if current_time > '19:00:00':
                     # 看短剧
                     short_video_id = [0.5, 2, 5, 10, 30, 60, 120]
                     if next_short_video != -1:
                         short_video_start = short_video_id.index(next_short_video)
-
                         if short_video_id[short_video_start] == 0.5:
                             short_video_minute = '30s'
                         else:
                             short_video_minute = f'{short_video_id[short_video_start]}m'
-                        short_video_start += self.daily_watch_short_video(
-                            'daily_short_video_' + short_video_minute)
+                        short_video_start += self.daily_watch_short_video('daily_short_video_' + short_video_minute)
                         if short_video_start <= len(short_video_id) - 1:
                             next_short_video = short_video_id[short_video_start]
                         else:
@@ -740,7 +737,7 @@ class Tomato(object):
                     if next_readComic != -1:
                         comic_start = comic_id.index(next_readComic)
                         # for cid in range(len(comic_id) - comic_start):
-                        # self.daily_read_comics(f'daily_read_comics_{comic_id[cid + comic_start]}m')
+                        #     self.daily_read_comics(f'daily_read_comics_{comic_id[cid + comic_start]}m')
                         comic_start += self.daily_read_comics(f'daily_read_comics_{comic_id[comic_start]}m')
                         self.excitation_ad_repeat('excitation_ad_repeat')
                         if comic_start <= len(comic_id) - 1:
@@ -766,8 +763,7 @@ class Tomato(object):
         # 写回
         current_time = time.localtime()  # 获取当前时间
         format_time = time.strftime('%m-%d %H:%M:%S', current_time)  # 格式化时间为字符串
-
-        return {
+        NEW_USER_JSON[index] = {
             "name": name,
             "amount": self.amount + amount,
             "time": format_time,
@@ -795,16 +791,22 @@ def run_task(index):
     max_retries = 3
     for try_num in range(max_retries):
         try:
-            return Tomato(user_cookies[index]).run(index, API_URL, user_list[index])
+            Tomato(user_cookies[index]).run(index, API_URL, user_list[index])
+            return
         except:
             if try_num < max_retries - 1:
                 log.error(f'进行第{try_num + 1}次重试')
             else:
                 log.error(f'重试完毕')
-    return user_list[index]
 
 
 API_URL = get_proxy_api(TASK_NAME)
+
+
+class MyAdapter(HTTPAdapter):
+    def init_poolmanager(self, connections, maxsize, block=False, **pool_kwargs):
+        self.poolmanager = PoolManager(num_pools=connections, maxsize=maxsize, block=block, ssl_version=ssl.PROTOCOL_TLSv1_2)
+
 
 if __name__ == "__main__":
     if TASK_NAME in os.environ:
@@ -814,7 +816,8 @@ if __name__ == "__main__":
         exit(-1)
 
     user_list = load_file(TOMATO_READ_JSON)
-    new_user_list = []
+    [NEW_USER_JSON.append(user) for user in user_list]
+
     user_cookies = cookies.split('&http')
     log.info(f"环境变量读取到{len(user_cookies)}个账号")
     log.info(f"Json文件读取到{len(user_list)}个账号")
@@ -825,14 +828,4 @@ if __name__ == "__main__":
     with futures.ThreadPoolExecutor(max_workers=1) as pool:
         tasks = [pool.submit(run_task, index) for index in range(count)]
         futures.wait(tasks)
-        task_completed = futures.as_completed(tasks)
-        index = 0
-        for future in futures.as_completed(tasks):
-            try:
-                new_user_list.append(future.result())
-            except Exception as e:
-                log.error(f'任务执行失败')
-                new_user_list.append(user_list[index])
-            index += 1
-    pool.shutdown()
-    write_file(TOMATO_READ_JSON, new_user_list)
+    write_file(TOMATO_READ_JSON, NEW_USER_JSON)

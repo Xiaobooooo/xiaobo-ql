@@ -5,7 +5,7 @@ new Env('Avive_开启空投')
 import requests
 from requests import Session
 
-from DL_AviveDaily import get_params, get_headers
+from DL_AviveWeekly import get_params, get_headers
 from common.task import QLTask, get_proxy
 from common.util import log, log_exc
 

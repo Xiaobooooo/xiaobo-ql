@@ -1,6 +1,6 @@
 """
-cron: 0 12 1-31/2 * *
-new Env('Avive_每日奖励')
+cron: 0 12 1-31/7 * *
+new Env('Avive_每周奖励')
 """
 import hashlib
 import json

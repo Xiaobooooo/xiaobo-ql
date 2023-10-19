@@ -252,7 +252,7 @@ class Tomato(object):
 
     def daily_watch_short_video(self, short_video_task_key):
         self.get_ad_info('get_ad_info')
-        # time.sleep(random.uniform(4, 6))
+        time.sleep(random.uniform(6, 10))
         url = 'https://api5-normal-hl.fqnovel.com/luckycat/novel/v1/task/done/daily_watch_short_video?' + self.params
         payload = {"short_video_task_key": short_video_task_key}
         res = self.session.post(url, json=payload).json()
@@ -350,7 +350,7 @@ class Tomato(object):
 
     # 浏览商品赚钱 60秒
     def browse_products(self, task_key):
-        # time.sleep(random.uniform(6, 10))
+        time.sleep(random.uniform(6, 10))
         url = f'https://api3-normal-hl.fqnovel.com/luckycat/novel/v1/task/done/{task_key}?' + self.params
         payload = {"task_key": task_key}
         res = self.session.post(url, json=payload).json()
@@ -604,7 +604,7 @@ class Tomato(object):
         self.next_open_treasure_box = next_open_treasure_box
         remain_second = next_open_treasure_box - int(time.time()) + 1
         self.get_balance()
-        log.info(f'当前remaid_second:{remain_second}')
+        # log.info(f'当前remaid_second:{remain_second}')
         if 0 < remain_second < LIMIT_SECOND:
             log.info(f'【开宝箱】{remain_second}秒后才能开宝箱')
             # time.sleep(remain_second)

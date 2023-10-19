@@ -11,7 +11,7 @@ import time
 
 import requests
 
-from fqxs.TB_fqxs_init import write_file, load_file, log
+from TB_fqxs_init import write_file, load_file, log
 
 DELAY_MINUTES = 10  # 10分钟一次
 EXEC_READ = 1

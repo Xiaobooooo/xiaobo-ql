@@ -794,11 +794,11 @@ class Tomato(object):
 API_URL = get_proxy_api(TASK_NAME)
 
 if __name__ == "__main__":
-    # if TASK_NAME in os.environ:
-    #     cookies = os.getenv('tomato_read')
-    # else:
-    #     log.info("变量[tomato_read]不存在,请设置[tomato_read]变量后运行")
-    #     exit(-1)
+    if TASK_NAME in os.environ:
+        cookies = os.getenv('tomato_read')
+    else:
+        log.info("变量[tomato_read]不存在,请设置[tomato_read]变量后运行")
+        exit(-1)
 
     user_list = load_file(TOMATO_READ_JSON)
     new_user_list = []

@@ -107,11 +107,11 @@ def tomato_read_json_init() -> int:
 
 
 if __name__ == '__main__':
-    if 'tomato_read' in os.environ:
-        cookies = os.getenv('tomato_read')
-    else:
-        print("变量[tomato_read]不存在,请设置[tomato_read]变量后运行")
-        exit(-1)
+    # if 'tomato_read' in os.environ:
+    #     cookies = os.getenv('tomato_read')
+    # else:
+    #     print("变量[tomato_read]不存在,请设置[tomato_read]变量后运行")
+    #     exit(-1)
 
     cookies_list = cookies.split('&http')
     log.info(f"环境变量读取到{len(cookies_list)}个账号")

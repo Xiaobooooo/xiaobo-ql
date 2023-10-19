@@ -1,5 +1,5 @@
 """
-cron: 3 0/10 * * * *
+cron: 3/10 * * * *
 new Env('FQXS_TASK')
 """
 import logging
@@ -8,6 +8,7 @@ import random
 import re
 import threading
 import time
+from concurrent import futures
 
 import requests
 
@@ -104,7 +105,8 @@ class Tomato(object):
     excitation_ad_repeat_cnt = None
     next_open_treasure_box = None
 
-    def __init__(self, proxy: str, log: logging, cookies: str):
+    def __init__(self, api: str, index: int, cookies: str):
+        log.info(f"=========开始第{index + 1}个账号=========")
         self.task_url = cookies.split("#")[0]
         self.cookie = cookies.split("#")[1]
         self.argus = cookies.split("#")[2]
@@ -113,7 +115,7 @@ class Tomato(object):
         self.passport_sdk_version = cookies.split("#")[5]
         self.params = re.findall('\?(.*?)$', self.task_url)[0]
         self.session = requests.session()
-        self.session.proxies = {'https': proxy}
+        self.session.proxies = {'https': get_proxy(api)}
         self.session.headers = {
             'User-Agent': self.ua,
             'sdk-version': self.sdk_version,
@@ -122,7 +124,6 @@ class Tomato(object):
             'x-ladon': self.ladon,
             'Cookie': self.cookie
         }
-        self.log = log
 
     def get_username(self):
         url = 'https://api5-normal-hl.fqnovel.com/reading/user/info/v/?' + self.params
@@ -135,25 +136,25 @@ class Tomato(object):
         if res["err_no"] == 0:
             score_balance = res["data"]["take_cash_info"]["income_data"]["score_balance"]
             cash_balance = res["data"]["take_cash_info"]["income_data"]["cash_balance"] * 0.01
-            self.log.info(f'当前金币: {score_balance}   现金: {cash_balance}元')
+            log.info(f'当前金币: {score_balance}   现金: {cash_balance}元')
         else:
-            self.log.info(f'当前金币: 查询失败   现金: 查询失败')
+            log.info(f'当前金币: 查询失败   现金: 查询失败')
 
     def get_ad_info(self, task_key):
         time.sleep(random.uniform(1, 5))
         url = f'https://api3-normal-hl.fqnovel.com/luckycat/novel/v1/task/{task_key}?' + self.params
         res = self.session.get(url).json()
-        self.log.info('------------[repeat]获取广告信息如下------------')
+        log.info('------------[repeat]获取广告信息如下------------')
         err = res.get('err_tips')
         amount = res.get('data').get('score_amount')
-        self.log.info(f'【状态】: {err}!\n【预计奖励】: {amount}金币')
-        self.log.info('-----------------------')
+        log.info(f'【状态】: {err}!\n【预计奖励】: {amount}金币')
+        log.info('-----------------------')
         return res
 
     def page(self, task_key):
         url = f'https://api3-normal-hl.fqnovel.com/luckycat/novel/v1/task/{task_key}?' + self.params
         res = self.session.get(url).text
-        self.log.info(res)
+        log.info(res)
 
     # 宝箱任务
     def treasure_task(self, task_key):
@@ -161,17 +162,17 @@ class Tomato(object):
         res = self.session.post(url, json={}).json()
         if res.get('err_no') == 0:
             amount = res.get('data').get('amount')
-            self.log.info(f'【开宝箱】获得{amount}金币')
+            log.info(f'【开宝箱】获得{amount}金币')
             self.next_open_treasure_box = int(time.time()) + 1 + 300
             local = time.localtime(self.next_open_treasure_box)
             format_time = time.strftime('%H:%M:%S', local)
-            self.log.info(f'【开宝箱】下次宝箱时间:{format_time}')
+            log.info(f'【开宝箱】下次宝箱时间:{format_time}')
             self.amount += amount
             self.excitation_ad_treasure_box('excitation_ad_treasure_box')
             self.excitation_ad_repeat('excitation_ad_repeat')
             return 1
         else:
-            self.log.info('【开宝箱】' + res.get('err_tips'))
+            log.info('【开宝箱】' + res.get('err_tips'))
             return 0
 
     # 看宝箱视频
@@ -183,12 +184,12 @@ class Tomato(object):
             res = self.session.post(url, json=payload).json()
             if res.get('err_no') == 0:
                 amount = res.get('data').get('amount')
-                self.log.info(f'【看宝箱视频】获得{amount}金币')
+                log.info(f'【看宝箱视频】获得{amount}金币')
                 self.amount += amount
             else:
-                self.log.info('【看宝箱视频】' + res.get('err_tips'))
+                log.info('【看宝箱视频】' + res.get('err_tips'))
         except:
-            self.log.info('【看宝箱视频】异常')
+            log.info('【看宝箱视频】异常')
             exit(-1)
 
     # 看视频赚金币-追加视频
@@ -200,11 +201,11 @@ class Tomato(object):
             res = self.session.post(url, json=payload).json()
             if res.get('err_no') == 0:
                 amount = res.get('data').get('amount')
-                self.log.info(f'【看额外视频】获得{amount}金币')
+                log.info(f'【看额外视频】获得{amount}金币')
                 self.excitation_ad_repeat_cnt -= 1
                 self.amount += amount
             else:
-                self.log.info('【看额外视频】' + res.get('err_tips'))
+                log.info('【看额外视频】' + res.get('err_tips'))
                 if res.get('err_tips') == '你已完成此任务':
                     cur_time = time.strftime('%H:%M:%S')
                     res = self.get_ad_info('get_ad_info')
@@ -221,17 +222,17 @@ class Tomato(object):
             res = self.session.post(url, json=payload).json()
             if res.get('err_no') == 0:
                 amount = res.get('data').get('amount')
-                self.log.info(f'【看视频赚金币】获得{amount}金币')
+                log.info(f'【看视频赚金币】获得{amount}金币')
                 self.amount += amount
                 self.excitation_ad_repeat('excitation_ad_repeat')
                 return 1
             else:
-                self.log.info('【看视频赚金币】' + res.get('err_tips'))
+                log.info('【看视频赚金币】' + res.get('err_tips'))
                 if res.get('err_tips') == '你已完成此任务':
                     return 1
                 return 0
         except:
-            self.log.info('【看视频赚金币】异常')
+            log.info('【看视频赚金币】异常')
 
     def excitation_ad_listen(self, task_key):
         self.get_ad_info('get_ad_info')
@@ -241,14 +242,14 @@ class Tomato(object):
         res = self.session.post(url, json=payload).json()
         err = res.get('err_tips')
         amount = res.get('data').get('score_amount')
-        self.log.info(f'【状态】: {err}!\n【预计奖励】: {amount}金币')
+        log.info(f'【状态】: {err}!\n【预计奖励】: {amount}金币')
         if res.get('err_no') == 0:
             amount = res.get('data').get('amount')
-            self.log.info(f'【看阅读广告】获得{amount}金币')
+            log.info(f'【看阅读广告】获得{amount}金币')
             self.amount += amount
             return 1
         else:
-            self.log.info('【看阅读广告】' + res.get('err_tips'))
+            log.info('【看阅读广告】' + res.get('err_tips'))
             return 0
 
     def daily_watch_short_video(self, short_video_task_key):
@@ -259,12 +260,12 @@ class Tomato(object):
         res = self.session.post(url, json=payload).json()
         if res.get('err_no') == 0:
             amount = res.get('data').get('amount')
-            self.log.info(f'【每日看短剧】获得{amount}金币')
+            log.info(f'【每日看短剧】获得{amount}金币')
             self.amount += amount
             self.excitation_ad_repeat('excitation_ad_repeat')
             return 1
         else:
-            self.log.info(f'【每日看短剧】' + res.get('err_tips'))
+            log.info(f'【每日看短剧】' + res.get('err_tips'))
             if '你已完成此任务' == res.get('err_tips'):
                 return 1
             return 0
@@ -278,17 +279,17 @@ class Tomato(object):
             url = f'https://api3-normal-hl.fqnovel.com/luckycat/novel/v1/task/done/{task_key}?' + self.params
             payload = {"action": "withdraw"}
             res = self.session.post(url, json=payload).json()
-            # self.log.info(res)
+            # log.info(res)
             tip = re.findall('daily_(.*?)_', task_key)[0]
             if res.get('err_no') == 0:
                 amount = res.get('data').get('amount')
-                self.log.info(f'【{tip}】获得{amount}金币')
+                log.info(f'【{tip}】获得{amount}金币')
                 self.amount += amount
                 self.excitation_ad_listen('excitation_ad_listen')
                 self.excitation_ad_repeat('excitation_ad_repeat')
                 return 1
             else:
-                self.log.info(f'【{tip}】' + res.get('err_tips'))
+                log.info(f'【{tip}】' + res.get('err_tips'))
                 if '你已完成此任务' == res.get('err_tips'):
                     return 1
                 return 0
@@ -310,20 +311,20 @@ class Tomato(object):
         elif '21:00:00' <= time_str <= '24:00:00':
             meal_type = 3
         else:
-            self.log.info('未到吃饭时间')
+            log.info('未到吃饭时间')
             return
         url = f'https://api3-normal-hl.fqnovel.com/luckycat/novel/v1/task/done/{task_key}?' + self.params
         payload = {"meal_type": meal_type, "task_key": task_key}
         res = self.session.post(url, json=payload).json()
-        # self.log.info(res)
+        # log.info(res)
         if res.get('err_no') == 0:
             amount = res.get('data').get('amount')
-            self.log.info(f'【吃饭】获得{amount}金币')
+            log.info(f'【吃饭】获得{amount}金币')
             self.excitation_ad_meal('excitation_ad_meal')
             self.excitation_ad_repeat('excitation_ad_repeat')
             return meal_type
         else:
-            self.log.info('【吃饭】' + res.get('err_tips'))
+            log.info('【吃饭】' + res.get('err_tips'))
             if '你已完成此任务' == res.get('err_tips'):
                 return meal_type
             return -1
@@ -335,19 +336,19 @@ class Tomato(object):
         res = self.session.post(url, json=payload).json()
         if res.get('err_no') == 0:
             amount = res.get('data').get('amount')
-            self.log.info(f'【看吃饭广告】获得{amount}金币')
+            log.info(f'【看吃饭广告】获得{amount}金币')
             self.amount += amount
         else:
-            self.log.info('【看吃饭广告】' + res.get('err_tips'))
+            log.info('【看吃饭广告】' + res.get('err_tips'))
 
     def excitation_ad_read_gain(self, payload_task_key):
         url = 'https://api5-normal-hl.fqnovel.com/luckycat/novel/v1/task/done/excitation_ad_read_gain?' + self.params
         payload = {"task_key": payload_task_key}
         res = self.session.post(url, json=payload).json()
         if res.get('err_no') == 0:
-            self.log.info('【奖励加倍】' + res.get('err_tips'))
+            log.info('【奖励加倍】' + res.get('err_tips'))
         else:
-            self.log.info('【奖励加倍】' + res.get('err_tips'))
+            log.info('【奖励加倍】' + res.get('err_tips'))
 
     # 浏览商品赚钱 60秒
     def browse_products(self, task_key):
@@ -357,11 +358,11 @@ class Tomato(object):
         res = self.session.post(url, json=payload).json()
         if res.get('err_no') == 0:
             amount = res.get('data').get('amount')
-            self.log.info(f'【浏览商品赚钱】获得{amount}金币')
+            log.info(f'【浏览商品赚钱】获得{amount}金币')
             self.amount += amount
             return 1
         else:
-            self.log.info('【浏览商品赚钱】' + res.get('err_tips'))
+            log.info('【浏览商品赚钱】' + res.get('err_tips'))
             if res.get('err_tips') == '你已完成此任务':
                 return 1
             return 0
@@ -374,11 +375,11 @@ class Tomato(object):
         res = self.session.post(url, json=payload).json()
         if res.get('err_no') == 0:
             amount = res.get('data').get('amount')
-            self.log.info(f'【逛街赚金币】获得{amount}金币')
+            log.info(f'【逛街赚金币】获得{amount}金币')
             self.amount += amount
             return 1
         else:
-            self.log.info('【逛街赚金币】' + res.get('err_tips'))
+            log.info('【逛街赚金币】' + res.get('err_tips'))
             if res.get('err_tips') == '你已完成此任务':
                 return 1
             return 0
@@ -392,13 +393,13 @@ class Tomato(object):
             url = f'https://api3-normal-hl.fqnovel.com/luckycat/novel/v1/task/done/{task_key}?' + self.params
             payload = {"done_type": done_type, "task_key": task_key}
             res = self.session.post(url, json=payload).json()
-            self.log.info(res)
+            log.info(res)
             if res.get('err_no') == 0:
-                self.log.info('【去睡觉】')
+                log.info('【去睡觉】')
                 # self.excitation_ad_repeat('excitation_ad_repeat')
                 return 1
             else:
-                self.log.info('【去睡觉】' + res.get('err_tips'))
+                log.info('【去睡觉】' + res.get('err_tips'))
                 if '你已完成此任务' == res.get('err_tips'):
                     return 1
                 return 0
@@ -407,7 +408,7 @@ class Tomato(object):
             url = f'https://api3-normal-hl.fqnovel.com/luckycat/novel/v1/task/done/{task_key}?' + self.params
             payload = {"done_type": done_type, "task_key": task_key}
             res = self.session.post(url, json=payload).json()
-            self.log.info(res)
+            log.info(res)
             if 'err_no' in res:
                 if res.get('err_no') == 10007:
                     return 0
@@ -418,7 +419,7 @@ class Tomato(object):
                     res = self.session.post(url, json=payload).json()
                     if res.get('err_no') == 0:
                         amount = res.get('data').get('amount')
-                        self.log.info(f'【结束睡觉】获得{amount}金币')
+                        log.info(f'【结束睡觉】获得{amount}金币')
                         self.amount += amount
                         # 执行广告
                         self.sleep_ad('sleep_ad')
@@ -426,12 +427,12 @@ class Tomato(object):
                         self.excitation_ad_repeat('excitation_ad_repeat')
                         return 1
                     else:
-                        self.log.info('【结束睡觉】' + res.get('err_tips'))
+                        log.info('【结束睡觉】' + res.get('err_tips'))
                         if '你已完成此任务' == res.get('err_tips'):
                             return 1
                         return 0
             else:
-                self.log.info('不在睡觉时间')
+                log.info('不在睡觉时间')
                 return 0
 
     def sleep_ad(self, task_key):
@@ -441,12 +442,12 @@ class Tomato(object):
         res = self.session.post(url, json=payload).json()
         if res.get('err_no') == 0:
             amount = res.get('data').get('amount')
-            self.log.info(f'【看睡觉广告】获得{amount}金币')
+            log.info(f'【看睡觉广告】获得{amount}金币')
             self.amount += amount
             self.excitation_ad_repeat('excitation_ad_repeat')
             return 1
         else:
-            self.log.info('【看睡觉广告】' + res.get('err_tips'))
+            log.info('【看睡觉广告】' + res.get('err_tips'))
             if '你已完成此任务' == res.get('err_tips'):
                 return 1
             return 0
@@ -457,15 +458,15 @@ class Tomato(object):
             url = 'https://api3-normal-hl.fqnovel.com/luckycat/novel/v1/task/done/daily_read_comics?' + self.params
             payload = {"read_comics_task_key": task_key, "task_key": "daily_read_comics"}
             res = self.session.post(url, json=payload).json()
-            # self.log.info(res)
+            # log.info(res)
             if res.get('err_no') == 0:
                 amount = res.get('data').get('amount')
-                self.log.info(f'【看漫画】获得{amount}金币')
+                log.info(f'【看漫画】获得{amount}金币')
                 self.amount += amount
                 # self.excitation_ad_repeat('excitation_ad_repeat')
                 return 1
             else:
-                self.log.info('【看漫画】' + res.get('err_tips'))
+                log.info('【看漫画】' + res.get('err_tips'))
                 if '你已完成此任务' == res.get('err_tips'):
                     return 1
                 return 0
@@ -475,16 +476,16 @@ class Tomato(object):
         url = f'https://api5-normal-hl.fqnovel.com/luckycat/novel/v1/task/done/{task_key}?' + self.params
         payload = {}
         res = self.session.post(url, json=payload).json()
-        # self.log.info(res)
+        # log.info(res)
         if res.get('err_no') == 0:
             amount = res.get('data').get('amount')
             task_key = res.get('data').get('new_excitation_ad').get('task_key')
-            self.log.info(f'【签到】获得{amount}金币')
+            log.info(f'【签到】获得{amount}金币')
             self.amount += amount
             self.excitation_ad(task_key)
             return 1
         else:
-            self.log.info('【签到】' + res.get('err_tips'))
+            log.info('【签到】' + res.get('err_tips'))
             if '你已完成此任务' == res.get('err_tips'):
                 return 1
             return 0
@@ -496,11 +497,11 @@ class Tomato(object):
         res = self.session.post(url, json=payload).json()
         if res.get('err_no') == 0:
             amount = res.get('data').get('amount')
-            self.log.info(f'【每日玩游戏】获得{amount}金币')
+            log.info(f'【每日玩游戏】获得{amount}金币')
             self.amount += amount
             return 1
         else:
-            self.log.info('【每日玩游戏】' + res.get('err_tips'))
+            log.info('【每日玩游戏】' + res.get('err_tips'))
             if '你已完成此任务' == res.get('err_tips'):
                 return 1
             return 0
@@ -511,27 +512,27 @@ class Tomato(object):
             time.sleep(random.uniform(5, 10))
             res = self.session.get(url).json()
             if res.get('err_no') == 0:
-                self.log.info(res)
+                log.info(res)
                 self.lottery_cnt = res.get('data').get('can_lottery_times')
             else:
-                self.log.info('【查询抽奖页面】' + res.get('err_tips'))
+                log.info('【查询抽奖页面】' + res.get('err_tips'))
         elif task_key == 'lottery_task_page':
             # 查询抽奖任务
             time.sleep(random.uniform(1, 5))
             res = self.session.get(url).json()
             if res.get('err_no') == 0:
-                # self.log.info(res)
+                # log.info(res)
                 task_list = res.get('data').get('task_list')
                 taskId = {}
                 for task_data in task_list:
-                    # self.log.info(task_data)
+                    # log.info(task_data)
                     task_id = task_data.get('task_id')
                     chance_time = task_data.get('chance_times')
                     taskId[task_id] = chance_time
-                self.log.info('返回taskId success')
+                log.info('返回taskId success')
                 self.taskId = taskId
             else:
-                self.log.info('【查询抽奖页面】' + res.get('err_tips'))
+                log.info('【查询抽奖页面】' + res.get('err_tips'))
         elif task_key == 'update_chance':
             # 去抽奖
             # task_id : 73[看视频抽奖（0/10）],74[阅读抽奖（0/1）],75[逛街抽奖（0/1）]
@@ -543,7 +544,7 @@ class Tomato(object):
                     payload = {"task_id": tid}
                     res = self.session.post(url, json=payload).json()
                     # if res.get('err_no') != 0:
-                    self.log.info('【增加抽奖机会】' + res.get('err_tips'))
+                    log.info('【增加抽奖机会】' + res.get('err_tips'))
                     time.sleep(random.uniform(6, 8))
 
         elif task_key == 'do_lottery':
@@ -554,11 +555,11 @@ class Tomato(object):
                 res = self.session.post(url, json=payload).json()
                 if res.get('err_no') == 0:
                     amount = res.get('data').get('reward').get('amount')
-                    self.log.info(f'【抽奖】获得{amount}')
+                    log.info(f'【抽奖】获得{amount}')
                     self.amount += amount
                     time.sleep(random.uniform(2, 3))
                 else:
-                    self.log.info('【抽奖】' + res.get('err_tips'))
+                    log.info('【抽奖】' + res.get('err_tips'))
 
         elif task_key == 'continue_lottery':
             # 每日抽奖签到
@@ -567,10 +568,10 @@ class Tomato(object):
             res = self.session.post(url, json=payload).json()
             if res.get('err_no') == 0:
                 amount = res.get('data').get('amount')
-                self.log.info(f'【每日抽奖签到】获得{amount}')
+                log.info(f'【每日抽奖签到】获得{amount}')
                 self.amount += amount
             else:
-                self.log.info('【每日抽奖签到】' + res.get('err_tips'))
+                log.info('【每日抽奖签到】' + res.get('err_tips'))
 
     def run(self, user_data) -> dict:
         # 查询
@@ -597,15 +598,15 @@ class Tomato(object):
         # 执行
         if name == 'none':
             name = self.get_username()
-        self.log.info(f'用户【{name}】')
+        log.info(f'用户【{name}】')
         if next_open_treasure_box is None:
             next_open_treasure_box = 0
         self.next_open_treasure_box = next_open_treasure_box
         remain_second = next_open_treasure_box - int(time.time()) + 1
         self.get_balance()
-        self.log.info(f'当前remaid_second:{remain_second}')
+        log.info(f'当前remaid_second:{remain_second}')
         if 0 < remain_second < LIMIT_SECOND:
-            self.log.info(f'【开宝箱】等待{remain_second}s开宝箱')
+            log.info(f'【开宝箱】等待{remain_second}s开宝箱')
             time.sleep(remain_second)
             treasure_task_cnt += self.treasure_task('treasure_task')
         elif remain_second < 0:
@@ -639,20 +640,20 @@ class Tomato(object):
 
             # 需要完成结束睡觉
             if sleep_finished == 'start_sleep' and '05:00:00' <= current_time <= '08:00:00':
-                self.log.info('需要完成结束睡觉')
+                log.info('需要完成结束睡觉')
                 if self.sleep('sleep'):
                     sleep_finished = 'end_sleep'
 
                 # 需要完成去睡觉
             elif sleep_finished == 'end_sleep' and '22:00:00' <= current_time <= '23:45:00':
-                self.log.info('需要完成去睡觉')
+                log.info('需要完成去睡觉')
                 if self.sleep('sleep'):
                     sleep_finished = 'start_sleep'
 
             if meal_finished == -1:
                 for mid in range(4):
                     key_time = meal_judge.get(mid)
-                    # self.log.info(key_time)
+                    # log.info(key_time)
                     start_time = re.findall('^(.*?)-', key_time)[0]
                     end_time = re.findall('-(.*?)$', key_time)[0]
                     if start_time <= current_time <= end_time:
@@ -671,7 +672,7 @@ class Tomato(object):
                     meal_finished = self.meal('meal')
 
             # 阅读
-            # self.log.info(f'阅读本次：{next_readNovel}')
+            # log.info(f'阅读本次：{next_readNovel}')
             if EXEC_READ:
                 if current_time > '14:00:00':
                     read_id = [0.5, 2, 5, 10, 30, 60, 120, 180]
@@ -699,7 +700,7 @@ class Tomato(object):
                             next_readNovel = -1
 
                     # 听书
-                    # self.log.info(f'听书本次：{next_listenNoval}')
+                    # log.info(f'听书本次：{next_listenNoval}')
                 if current_time > '17:00:00':
                     listen_id = [0.5, 2, 5, 10, 30, 60, 120, 180]
                     if next_listenNoval != -1:
@@ -734,7 +735,7 @@ class Tomato(object):
 
                 if current_time > '21:00:00':
                     # 看漫画
-                    # self.log.info(f'看漫画本次：{next_readComic}')
+                    # log.info(f'看漫画本次：{next_readComic}')
                     comic_id = [1, 5, 10, 25, 45, 60]
                     if next_readComic != -1:
                         comic_start = comic_id.index(next_readComic)
@@ -758,8 +759,8 @@ class Tomato(object):
                 self.lottery('do_lottery')
                 lottery = -1
 
-        self.log.info(f'【开宝箱】已开宝箱{treasure_task_cnt}次')
-        self.log.info(f'本次执行获得{self.amount}金币')
+        log.info(f'【开宝箱】已开宝箱{treasure_task_cnt}次')
+        log.info(f'本次执行获得{self.amount}金币')
         self.get_balance()
 
         # 写回
@@ -807,9 +808,15 @@ if __name__ == "__main__":
     count = len(user_cookies)
     if count > len(user_list):
         count = len(user_list)
-    for i in range(count):
-        log.info(f"=========开始第{i + 1}个账号=========")
-        proxy = get_proxy(API_URL)
-        user_json = Tomato(proxy, log, user_cookies[i]).run(user_list[i])
-        new_user_list.append(user_json)
+
+    with futures.ThreadPoolExecutor(max_workers=1) as pool:
+        tasks = [pool.submit(Tomato(API_URL, index, user_cookies[index]).run, user_list[index]) for index in range(count)]
+        futures.wait(tasks)
+        for future in futures.as_completed(tasks):
+            try:
+                if future.result() is True:
+                    new_user_list.append(future.result())
+            except Exception as e:
+                log.error(f'任务执行失败: {repr(e)}')
+    pool.shutdown()
     write_file(TOMATO_READ_JSON, new_user_list)

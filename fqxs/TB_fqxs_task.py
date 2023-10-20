@@ -3,7 +3,6 @@ cron: 3-59/10 * * * *
 new Env('FQXS_TASK')
 """
 import os
-import random
 import re
 import ssl
 import threading
@@ -14,7 +13,6 @@ import requests
 from requests.adapters import HTTPAdapter, PoolManager
 
 from TB_fqxs_init import write_file, load_file, log
-from common.util import log_exc
 
 DELAY_MINUTES = 10  # 10分钟一次
 EXEC_READ = 1
@@ -244,8 +242,6 @@ class Tomato(object):
         payload = {"from": "gold_coin_reward_box_welfare", "position": "", "task_key": task_key}
         res = self.session.post(url, json=payload).json()
         err = res.get('err_tips')
-        amount = res.get('data').get('score_amount')
-        log.info(f'【状态】: {err}!\n【预计奖励】: {amount}金币')
         if res.get('err_no') == 0:
             amount = res.get('data').get('amount')
             log.info(f'【看阅读广告】获得{amount}金币')
@@ -287,7 +283,8 @@ class Tomato(object):
                 amount = res.get('data').get('amount')
                 log.info(f'【{tip}】获得{amount}金币')
                 self.amount += amount
-                self.excitation_ad_listen('excitation_ad_listen')
+                self.excitation_ad_listen('excitation_ad_read')
+                # self.excitation_ad_listen('excitation_ad_listen')
                 self.excitation_ad_repeat('excitation_ad_repeat')
                 return 1
             else:
@@ -573,7 +570,7 @@ class Tomato(object):
             else:
                 log.info('【每日抽奖签到】' + res.get('err_tips'))
 
-    def run(self, index, api, user_data) -> dict:
+    def run(self, index, api, user_data):
         log.info(f"=========开始第{index + 1}个账号=========")
         if api != '' and api is not None:
             self.session.proxies = {'https': get_proxy(api)}
@@ -710,7 +707,8 @@ class Tomato(object):
                                 listen_minute = '30s'
                             else:
                                 listen_minute = f'{listen_id[listen_start]}m'
-                            listen_start += self.task_read('daily_listen_' + listen_minute)
+                            # listen_start += self.task_read('daily_listen_' + listen_minute)
+                            listen_start += self.task_read('daily_read_' + listen_minute)
                             if listen_start <= len(listen_id) - 1:
                                 next_listenNoval = listen_id[listen_start]
                             else:
@@ -736,14 +734,14 @@ class Tomato(object):
                     comic_id = [1, 5, 10, 25, 45, 60]
                     if next_readComic != -1:
                         comic_start = comic_id.index(next_readComic)
-                        # for cid in range(len(comic_id) - comic_start):
-                        #     self.daily_read_comics(f'daily_read_comics_{comic_id[cid + comic_start]}m')
-                        comic_start += self.daily_read_comics(f'daily_read_comics_{comic_id[comic_start]}m')
-                        self.excitation_ad_repeat('excitation_ad_repeat')
-                        if comic_start <= len(comic_id) - 1:
-                            next_readComic = comic_id[comic_start]
-                        else:
-                            next_readComic = -1
+                        for cid in range(len(comic_id) - comic_start):
+                            self.daily_read_comics(f'daily_read_comics_{comic_id[cid + comic_start]}m')
+                            comic_start += self.daily_read_comics(f'daily_read_comics_{comic_id[comic_start]}m')
+                            self.excitation_ad_repeat('excitation_ad_repeat')
+                            if comic_start <= len(comic_id) - 1:
+                                next_readComic = comic_id[comic_start]
+                            else:
+                                next_readComic = -1
             prev_task_timeStamp = int(time.time()) + 1
 
         if '22:30:00' <= current_time <= '23:30:00':

@@ -95,7 +95,9 @@ def get_env(env_name: str) -> str:
     return ''
 
 
-def log_exc():
+def log_exc(only_msg: bool = False):
     except_type, except_value, except_traceback = sys.exc_info()
     except_file = os.path.split(except_traceback.tb_frame.f_code.co_filename)[1]
+    if only_msg:
+        return except_value
     return f'{except_file}_{except_traceback.tb_lineno}:{except_value}'

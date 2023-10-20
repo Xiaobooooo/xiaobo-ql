@@ -707,8 +707,7 @@ class Tomato(object):
                                 listen_minute = '30s'
                             else:
                                 listen_minute = f'{listen_id[listen_start]}m'
-                            # listen_start += self.task_read('daily_listen_' + listen_minute)
-                            listen_start += self.task_read('daily_read_' + listen_minute)
+                            listen_start += self.task_read('daily_listen_' + listen_minute)
                             if listen_start <= len(listen_id) - 1:
                                 next_listenNoval = listen_id[listen_start]
                             else:
@@ -734,14 +733,14 @@ class Tomato(object):
                     comic_id = [1, 5, 10, 25, 45, 60]
                     if next_readComic != -1:
                         comic_start = comic_id.index(next_readComic)
-                        for cid in range(len(comic_id) - comic_start):
-                            self.daily_read_comics(f'daily_read_comics_{comic_id[cid + comic_start]}m')
-                            comic_start += self.daily_read_comics(f'daily_read_comics_{comic_id[comic_start]}m')
-                            self.excitation_ad_repeat('excitation_ad_repeat')
-                            if comic_start <= len(comic_id) - 1:
-                                next_readComic = comic_id[comic_start]
-                            else:
-                                next_readComic = -1
+                        # for cid in range(len(comic_id) - comic_start):
+                        # self.daily_read_comics(f'daily_read_comics_{comic_id[cid + comic_start]}m')
+                        comic_start += self.daily_read_comics(f'daily_read_comics_{comic_id[comic_start]}m')
+                        self.excitation_ad_repeat('excitation_ad_repeat')
+                        if comic_start <= len(comic_id) - 1:
+                            next_readComic = comic_id[comic_start]
+                        else:
+                            next_readComic = -1
             prev_task_timeStamp = int(time.time()) + 1
 
         if '22:30:00' <= current_time <= '23:30:00':

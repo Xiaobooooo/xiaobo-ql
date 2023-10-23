@@ -1,16 +1,25 @@
 import logging
 import os
+import ssl
 import sys
 import threading
 import time
 
-logging.basicConfig(level=logging.INFO, datefmt="%H:%M:%S", format='%(asctime)s [%(lineno)d] %(levelname)s %(message)s')
+import requests
+from requests import Response
+from requests.adapters import HTTPAdapter, PoolManager
+
+logging.basicConfig(level=logging.INFO, datefmt="%H:%M:%S", format='%(asctime)s %(message)s')
 log = logging.getLogger()
 
 lock = threading.RLock()
 
 
-def load_txt(file_name: str) -> list[str]:
+class UnAuthorizationException(Exception):
+    pass
+
+
+def load_txt(file_name: str) -> list:
     """
     读取文本
     :param file_name: 文件名
@@ -23,7 +32,6 @@ def load_txt(file_name: str) -> list[str]:
     while os.path.exists(file_name) is False:
         log.error(f"不存在<{file_name}>文件，3秒后重试")
         time.sleep(3)
-
     with open(sys.path[0] + "/" + file_name, "r+") as f:
         while True:
             line = f.readline().strip()
@@ -95,9 +103,84 @@ def get_env(env_name: str) -> str:
     return ''
 
 
-def log_exc(only_msg: bool = False):
+def get_error_msg(name: str, response: Response, un_auths: list = None, msg_key: str = None, is_raise: bool = True) -> str:
+    """
+    获取响应中的错误消息，并抛出异常
+    :param name: 操作
+    :param response: 响应
+    :param un_auths: 未登录标识
+    :param msg_key: 消息key
+    :param is_raise: 是否抛出防火墙拦截
+    :return: 错误信息
+    """
+    msg = None
+    text = response.text.strip()
+    body = response.json() if text.startswith('{') and text.endswith('}') else {}
+    if body:
+        if msg_key:
+            msg = body.get(msg_key)
+        else:
+            msg = body.get('msg') if body.get('msg') else body.get('message')
+    if not msg:
+        msg = text
+
+    intercepts = ['You are unable to access', 'Cloudflare to restrict access', 'You do not have access to']
+    for intercept in intercepts:
+        if text.count(intercept):
+            msg = '请求被拦截'
+
+    un_login = ['未登录', '登录失效', '无效Token', '请先登录', '请登录后操作']
+    if un_auths:
+        un_login.extend(un_auths)
+    for un_auth in un_login:
+        if text.lower().count(un_auth.lower()):
+            raise UnAuthorizationException(f'{name}失败: 账号登录过期或被冻结、封禁')
+
+    msg = f'{name}失败: {msg}'
+    if is_raise:
+        raise Exception(msg)
+    return msg
+
+
+def get_except(only_msg: bool = False):
     except_type, except_value, except_traceback = sys.exc_info()
-    except_file = os.path.split(except_traceback.tb_frame.f_code.co_filename)[1]
     if only_msg:
         return except_value
-    return f'{except_file}_{except_traceback.tb_lineno}:{except_value}'
+    return f'{except_type.__name__}({except_value})'
+
+
+def get_random_session(client_list: list = None):
+    # if not client_list:
+    #     return get_chrome_session()
+    # client = client_list[random.randint(0, len(client_list) - 1)]
+    # return tls_client.Session(client_identifier=client, random_tls_extension_order=True)
+    return XbSession()
+
+
+def get_chrome_session():
+    chrome_list = ['chrome_103', 'chrome_104', 'chrome_105', 'chrome_106', 'chrome_107', 'chrome_108', 'chrome109', 'Chrome110',
+                   'chrome111', 'chrome112']
+    return get_random_session(chrome_list)
+
+
+def get_android_session():
+    android_list = ['okhttp4_android_7', 'okhttp4_android_8', 'okhttp4_android_9', ' okhttp4_android_10', 'okhttp4_android_11',
+                    'okhttp4_android_12', 'okhttp4_android_13']
+    return get_random_session(android_list)
+
+
+def get_ios_session():
+    ios_list = ['safari_ios_15_5', 'safari_ios_15_6', 'safari_ios_16_0']
+    return get_random_session(ios_list)
+
+
+class XbAdapter(HTTPAdapter):
+    def init_poolmanager(self, connections, maxsize, block=False, **pool_kwargs):
+        self.poolmanager = PoolManager(num_pools=connections, maxsize=maxsize, block=block, ssl_version=ssl.PROTOCOL_TLSv1_2)
+
+
+class XbSession(requests.Session):
+    def request(self, *arg, **kwargs):
+        timeout = kwargs.get('timeout') if kwargs.get('timeout') else 15
+        kwargs.setdefault('timeout', timeout)
+        return super().request(*arg, **kwargs)

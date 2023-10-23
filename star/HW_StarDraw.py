@@ -5,62 +5,45 @@ new Env('Star_抽奖')
 import requests
 from requests import Session
 
-from common.task import QLTask, get_proxy
-from common.util import log, log_exc, lock
+from common.task import QLTask
+from common.util import log, lock
 from HW_StarLogin import get_error, encrypt
+from HW_StarMining import FILE_NAME
 
 TASK_NAME = 'Star_抽奖'
-FILE_NAME = 'StarNetworkToken.txt'
 
 
 def draw(session: Session, uid: str) -> str:
+    name = '抽奖'
     payload = encrypt({"id": uid, "action": "draw_boost"})
     res = session.post('https://api.starnetwork.io/v3/event/draw', json=payload)
     if res.text.count('drawResult'):
         result = res.json()['drawResult']
-        return f'抽奖成功: {result}'
+        return f'{name}成功: {result}'
     if res.text.count('NOT_YET_FINISH'):
-        return f'抽奖时间未到'
-    get_error(res.text)
-    msg = res.json()['message'] if res.text.count('message') else res.text
-    raise Exception(f'抽奖失败:{msg}')
+        return f'{name}时间未到'
+    return get_error(name, res)
 
 
 class Task(QLTask):
-    def task(self, index: int, text: str) -> bool:
+    def task(self, index: int, text: str, proxy: str):
         split = text.split('----')
-        username = split[0]
         uid = split[-2]
         token = split[-1]
-        log.info(f'【{index}】{username}----正在完成任务')
 
-        session = requests.session()
-        session.headers = {
+        headers = {
             'User-Agent': 'Dart/2.19 (dart:io)',
             'Authorization': f'Bearer {token}'
         }
+        session = requests.session()
+        session.headers.update(headers)
+        session.proxies = {'https': proxy}
 
-        proxy = get_proxy(self.api_url)
-        for try_num in range(self.max_retries):
-            session.proxies = {'https': proxy}
-            try:
-                result = draw(session, uid)
-                if result.count('时间未到'):
-                    with lock:
-                        self.wait += 1
-                log.info(f'【{index}】{username}----{result}')
-                return True
-            except:
-                if log_exc().count('账号被封禁或登录失效'):
-                    self.fail_data.append(f'【{index}】{username}----{log_exc()}')
-                    return False
-                if try_num < self.max_retries - 1:
-                    log.error(f'【{index}】{username}----进行第{try_num + 1}次重试----{log_exc()}')
-                    proxy = get_proxy(self.api_url)
-                else:
-                    log.error(f'【{index}】{username}----重试完毕----{log_exc()}')
-                    self.fail_data.append(f'【{index}】{username}----{log_exc()}')
-        return False
+        result = draw(session, uid)
+        log.info(f'【{index}】{result}')
+        if result.count('时间未到'):
+            with lock:
+                self.wait += 1
 
 
 if __name__ == '__main__':

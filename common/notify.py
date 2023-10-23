@@ -178,7 +178,7 @@ def dingding_bot(title: str, content: str) -> None:
     headers = {"Content-Type": "application/json;charset=utf-8"}
     data = {"msgtype": "text", "text": {"content": f"{title}\n\n{content}"}}
     response = requests.post(
-        url=url, data=json.dumps(data), headers=headers, timeout=15
+        url=url, data=json.dumps(data), headers=headers
     ).json()
 
     if not response["errcode"]:
@@ -462,7 +462,7 @@ def wecom_bot(title: str, content: str) -> None:
     headers = {"Content-Type": "application/json;charset=utf-8"}
     data = {"msgtype": "text", "text": {"content": f"{title}\n\n{content}"}}
     response = requests.post(
-        url=url, data=json.dumps(data), headers=headers, timeout=15
+        url=url, data=json.dumps(data), headers=headers
     ).json()
 
     if response["errcode"] == 0:
@@ -655,9 +655,9 @@ def pushplus_bot(title: str, content: str) -> None:
         "topic": push_config.get("PUSH_PLUS_USER"),
     }
     response = requests.post(url=url, json=payload)
-    if not response.text.count('code') or response.json()["code"] != 200:
+    if not response.text.count('请求成功'):
         response = requests.post(url=url_old, json=payload)
-    if response.text.count('code') and response.json()["code"] == 200:
+    if response.text.count('请求成功'):
         print("PUSHPLUS 推送成功！")
     else:
         print("PUSHPLUS 推送失败！")
@@ -727,6 +727,7 @@ def send(title: str, content: str) -> None:
 
     text = one() if hitokoto else ""
     content += "\n\n" + text
+    content += "\n\n本次推送来自于: Xiaobo"
 
     ts = [
         threading.Thread(target=mode, args=(title, content), name=mode.__name__)

@@ -8,7 +8,7 @@ import string
 import time
 from urllib.parse import urlencode
 
-from tls_client import Session
+from requests import Session
 
 from common.task import QLTask
 from common.util import log, get_android_session, get_error_msg

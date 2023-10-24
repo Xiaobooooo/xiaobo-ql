@@ -99,8 +99,9 @@ class Task(QLTask):
             log.info(f'-----失败文本-----')
             write_txt('StarNetwork登录失败', ''.join([f'{email}\n' for email in self.fail_email]), True)
 
-    def push_data(self):
-        return f'总任务数：{self.total}\n成功数：{self.success}\n失败数：{len(self.fail_data)}\n封禁数：{len(self.blocked)}'
+    def get_push_data(self, data: str = None) -> str:
+        data = f'总任务数: {self.total}\n成功数: {self.success}\n失败数: {len(self.fail_data)}\n封禁数: {len(self.blocked)}'
+        return super().get_push_data(data)
 
 
 if __name__ == '__main__':

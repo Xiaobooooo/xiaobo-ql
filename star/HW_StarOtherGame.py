@@ -48,8 +48,9 @@ class Task(QLTask):
         result = game_record(session, game, score)
         log.info(f'【{index}】{result}')
 
-    def push_data(self):
-        return f'总任务数：{self.total}\n成功数：{self.success} (其中跳过数：{self.ignore})\n失败数：{len(self.fail_data)}'
+    def get_push_data(self, data: str = None) -> str:
+        data = f'总任务数: {self.total}\n成功数: {self.success} (其中跳过数: {self.ignore})\n失败数: {len(self.fail_data)}'
+        return super().get_push_data(data)
 
 
 if __name__ == '__main__':

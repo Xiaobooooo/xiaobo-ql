@@ -50,7 +50,6 @@ def get_thread_number(task_num: int) -> int:
     if thread_num < 1:
         thread_num = 1
         log.info('线程数量不能小于0，设置最低数量1')
-
     return thread_num
 
 
@@ -120,8 +119,8 @@ class QLTask(metaclass=ABCMeta):
         if load_notice:
             log.info('==========公告==========')
             try:
-                notice = get_random_session().get('https://static.xiaobooooo.com/text/notice').text
-                log.info(f'\n{notice}')
+                self.notice = get_random_session().get('https://static.xiaobooooo.com/text/notice').text
+                log.info(f'\n{self.notice}')
             except:
                 log.error('公告加载失败')
             log.info('==========公告==========\n')
@@ -172,7 +171,10 @@ class QLTask(metaclass=ABCMeta):
         proxy = get_proxy(self.api_url, index)
         for try_num in range(self.max_retries):
             try:
-                self.task(index, text, proxy)
+                result, message = self.task(index, text, proxy)
+                if result is False:
+                    self.fail_data.append(f'【{index}】{message}')
+                    return False
                 return True
             except UnAuthorizationException:
                 log.error(f'【{index}】{get_except(True)}')
@@ -194,12 +196,17 @@ class QLTask(metaclass=ABCMeta):
             log_data += ''.join([f'{fail}\n' for fail in self.fail_data])
             log.info(log_data[:-1])
 
-    def get_push_data(self) -> str:
+    def get_push_data(self, data: str = None) -> str:
         """
         推送数据
+        :param data: 原数据
         :return: 推送数据
         """
-        return f'总任务数：{self.total}\n成功数：{self.success} (其中时间未到数：{self.wait})\n失败数：{len(self.fail_data)}'
+        if not data:
+            data = f'总任务数: {self.total}\n成功数: {self.success} (其中时间未到数: {self.wait})\n失败数: {len(self.fail_data)}'
+        if self.notice:
+            data = f'{data}\n\n{self.notice}'
+        return data
 
     def save(self):
         """保存数据"""

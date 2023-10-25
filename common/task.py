@@ -171,9 +171,9 @@ class QLTask(metaclass=ABCMeta):
         proxy = get_proxy(self.api_url, index)
         for try_num in range(self.max_retries):
             try:
-                result, message = self.task(index, text, proxy)
-                if result is False:
-                    self.fail_data.append(f'【{index}】{message}')
+                result = self.task(index, text, proxy)
+                if result:
+                    self.fail_data.append(f'【{index}】{result}')
                     return False
                 return True
             except UnAuthorizationException:

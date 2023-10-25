@@ -41,7 +41,7 @@ class Task(QLTask):
             log.info(f'【{index}】不完成此任务')
             with lock:
                 self.ignore += 1
-            return True
+            return
 
         delay = random.randint(10, 30)
         log.info(f"【{index}】随机延迟{delay}秒后开始")

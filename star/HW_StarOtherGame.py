@@ -33,8 +33,7 @@ class Task(QLTask):
             return
         if not games.count(game):
             log.info(f'【{index}】游戏名有误')
-            self.fail_data.append(f'【{index}】游戏名有误')
-            return
+            return '游戏名有误'
 
         headers = {
             'User-Agent': 'Dart/2.19 (dart:io)',

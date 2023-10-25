@@ -43,10 +43,6 @@ class Task(QLTask):
                 self.ignore += 1
             return
 
-        delay = random.randint(10, 30)
-        log.info(f"【{index}】随机延迟{delay}秒后开始")
-        time.sleep(delay)
-
         headers = {
             'User-Agent': 'Dart/2.19 (dart:io)',
             'Authorization': f'Bearer {token}'

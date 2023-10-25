@@ -112,10 +112,11 @@ class QLTask(metaclass=ABCMeta):
     def __init__(self, task_name: str, file_name: str, load_notice: bool = True):
         self.wait = 0
         self.success = 0
-        self.fail_data = []
         self.task_name = task_name
         self.file_name = file_name
         self.un_auth = []
+        self.fail_data = []
+        self.notice = ''
         if load_notice:
             log.info('==========公告==========')
             try:
@@ -203,7 +204,7 @@ class QLTask(metaclass=ABCMeta):
         :return: 推送数据
         """
         if not data:
-            data = f'总任务数: {self.total}\n成功数: {self.success} (其中时间未到数: {self.wait})\n失败数: {len(self.fail_data)}'
+            data = f'总任务数: {self.total}\n成功数: {self.success} (其中时间未到数: {self.wait})\n失败数: {len(self.fail_data)} (其中登录过期或封禁数: {len(self.un_auth)})'
         if self.notice:
             data = f'{data}\n\n{self.notice}'
         return data

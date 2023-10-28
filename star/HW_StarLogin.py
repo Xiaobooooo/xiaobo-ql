@@ -37,8 +37,8 @@ def login(session: Session, username: str, password: str) -> str:
         body = res.json()
         if body.get('status') == 'blocked':
             return f'登录失败: 账号封禁'
-        if body.get('jwt')['status'] == 'registered':
-            return res.json().get('jwt')
+        if body.get('status') == 'registered':
+            return body.get('jwt')
     raise get_error(name, res)
 
 
@@ -77,7 +77,7 @@ class Task(QLTask):
         log.info(f'【{index}】登录成功|开始获取ID')
         session.headers.update({'Authorization': f'Bearer {result}'})
         uid = get_uid(session)
-        self.success_email.append(f'{password}----{uid}----{result}')
+        self.success_email.append(f'{username}----{password}----{uid}----{result}')
 
     def statistics(self):
         if len(self.blocked) > 0:

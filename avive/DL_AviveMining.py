@@ -31,10 +31,10 @@ def get_headers(url: str, token: str):
     timestamp = str(int(time.time()))
     nonce = ''.join(random.sample(string.ascii_letters + string.digits, 20))
     headers = {
-        'Authorization': 'HIN ' + token,
+        'Authorization': f'HIN {token}',
         'Request-Sgv': '2',
         'Host': 'api.avive.world',
-        'User-Agent': 'okhttp/4.6.0',
+        'User-Agent': 'okhttp/4.10.0',
         'timestamp': timestamp,
         'nonce': nonce
     }
@@ -53,6 +53,7 @@ def get_headers(url: str, token: str):
 def mining(session: Session, mac: str, did: str, token: str) -> str:
     name = '开启空投'
     url = "https://api.avive.world/v1/mint/start/?" + get_params(mac, did)
+    print(get_headers(url, token))
     res = session.post(url, headers=get_headers(url, token))
     if res.text.count('code') and res.json().get('code') == 0 and res.text.count('{}'):
         return f'{name}成功'

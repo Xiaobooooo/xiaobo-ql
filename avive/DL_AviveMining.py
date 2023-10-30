@@ -53,7 +53,6 @@ def get_headers(url: str, token: str):
 def mining(session: Session, mac: str, did: str, token: str) -> str:
     name = '开启空投'
     url = "https://api.avive.world/v1/mint/start/?" + get_params(mac, did)
-    print(get_headers(url, token))
     res = session.post(url, headers=get_headers(url, token))
     if res.text.count('code') and res.json().get('code') == 0 and res.text.count('{}'):
         return f'{name}成功'

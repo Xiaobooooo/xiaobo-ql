@@ -2,11 +2,10 @@
 cron: 33 5 * * *
 new Env('OverWallet_签到')
 """
-import requests
-from requests import Session
+from tls_client import Session
 
 from common.task import QLTask
-from common.util import log, lock, get_error_msg
+from common.util import log, lock, get_error_msg, get_android_session
 
 TASK_NAME = 'OverWallet_签到'
 FILE_NAME = 'OverWalletToken.txt'
@@ -33,7 +32,7 @@ class Task(QLTask):
             'User-Agent': 'okhttp/4.9.2',
             'authorization': f'Bearer {token}',
         }
-        session = requests.session()
+        session = get_android_session()
         session.headers.update(headers)
         session.proxies = {'https': proxy}
 

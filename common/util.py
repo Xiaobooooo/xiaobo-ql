@@ -1,13 +1,12 @@
 import logging
 import os
-import ssl
+import random
 import sys
 import threading
 import time
 
-import requests
-from requests import Response
-from requests.adapters import HTTPAdapter, PoolManager
+import tls_client
+from tls_client.response import Response
 
 logging.basicConfig(level=logging.INFO, datefmt="%H:%M:%S", format='%(asctime)s %(message)s')
 log = logging.getLogger()
@@ -150,11 +149,10 @@ def get_except(only_msg: bool = False):
 
 
 def get_random_session(client_list: list = None):
-    # if not client_list:
-    #     return get_chrome_session()
-    # client = client_list[random.randint(0, len(client_list) - 1)]
-    # return tls_client.Session(client_identifier=client, random_tls_extension_order=True)
-    return XbSession()
+    if not client_list:
+        return get_chrome_session()
+    client = client_list[random.randint(0, len(client_list) - 1)]
+    return tls_client.Session(client_identifier=client, random_tls_extension_order=True)
 
 
 def get_chrome_session():
@@ -172,15 +170,3 @@ def get_android_session():
 def get_ios_session():
     ios_list = ['safari_ios_15_5', 'safari_ios_15_6', 'safari_ios_16_0']
     return get_random_session(ios_list)
-
-
-class XbAdapter(HTTPAdapter):
-    def init_poolmanager(self, connections, maxsize, block=False, **pool_kwargs):
-        self.poolmanager = PoolManager(num_pools=connections, maxsize=maxsize, block=block, ssl_version=ssl.PROTOCOL_TLSv1_2)
-
-
-class XbSession(requests.Session):
-    def request(self, *arg, **kwargs):
-        timeout = kwargs.get('timeout') if kwargs.get('timeout') else 15
-        kwargs.setdefault('timeout', timeout)
-        return super().request(*arg, **kwargs)

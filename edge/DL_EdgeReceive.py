@@ -5,11 +5,10 @@ new Env('Edge_领取')
 import hashlib
 import time
 
-import requests
-from requests import Session
+from tls_client import Session
 
 from common.task import QLTask
-from common.util import log, get_error_msg
+from common.util import log, get_error_msg, get_android_session
 
 TASK_NAME = 'Edge_领取'
 FILE_NAME = 'EdgeToken'
@@ -43,7 +42,7 @@ class Task(QLTask):
             'Content-Type': 'application/x-www-form-urlencoded',
             'user-agent': 'Mozilla/5.0 (Linux; Android 9; HD1910 Build/PQ3B.190801.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/91.0.4472.114 Mobile Safari/537.36 uni-app Html5Plus/1.0 (Immersed/24.0)'
         }
-        session = requests.session()
+        session = get_android_session()
         session.headers.update(headers)
         session.proxies = {'https': proxy}
 

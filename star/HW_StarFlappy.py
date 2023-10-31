@@ -3,14 +3,11 @@ cron: 59 7 * * *
 new Env('Star_Flappy游戏')
 """
 import datetime
-import random
-import time
 
-import requests
-from requests import Session
+from tls_client import Session
 
 from common.task import QLTask
-from common.util import log, lock
+from common.util import log, lock, get_android_session
 from HW_StarLogin import get_error, encrypt
 
 TASK_NAME = 'Star_Flappy游戏'
@@ -47,7 +44,7 @@ class Task(QLTask):
             'User-Agent': 'Dart/2.19 (dart:io)',
             'Authorization': f'Bearer {token}'
         }
-        session = requests.session()
+        session = get_android_session()
         session.headers.update(headers)
         session.proxies = {'https': proxy}
 

@@ -2,11 +2,10 @@
 cron: 0 0-23/2 * * *
 new Env('Star_挖矿')
 """
-import requests
-from requests import Session
+from tls_client import Session
 
 from common.task import QLTask
-from common.util import log, lock
+from common.util import log, lock, get_android_session
 from HW_StarLogin import get_error
 
 TASK_NAME = 'Star_挖矿'
@@ -32,7 +31,7 @@ class Task(QLTask):
             'User-Agent': 'Dart/2.19 (dart:io)',
             'Authorization': f'Bearer {token}'
         }
-        session = requests.session()
+        session = get_android_session()
         session.headers.update(headers)
         session.proxies = {'https': proxy}
 

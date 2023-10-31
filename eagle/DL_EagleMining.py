@@ -4,11 +4,10 @@ new Env('Eagle_挖矿')
 """
 import time
 
-import requests
-from requests import Session
+from tls_client import Session
 
 from common.task import QLTask
-from common.util import log, lock, get_error_msg
+from common.util import log, lock, get_error_msg, get_android_session
 
 TASK_NAME = "Eagle_挖矿"
 FILE_NAME = "EagleToken.txt"
@@ -34,7 +33,7 @@ class Task(QLTask):
             'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 9; HD1910 Build/PQ3B.190801.002)',
             'AuthToken': token
         }
-        session = requests.session()
+        session = get_android_session()
         session.headers.update(headers)
         session.proxies = {"https": proxy}
 

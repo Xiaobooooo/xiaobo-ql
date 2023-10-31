@@ -5,7 +5,7 @@ new Env('Bee_挖矿')
 import json
 
 import requests
-from requests import Session
+from tls_client import Session
 
 from common.task import QLTask
 from common.util import log, lock, get_error_msg

@@ -4,15 +4,13 @@ new Env('FQXS_TASK')
 """
 import os
 import re
-import ssl
 import threading
 import time
 from concurrent import futures
 
-import requests
-from requests.adapters import HTTPAdapter, PoolManager
-
 from TB_fqxs_init import write_file, load_file, log
+from common.task import get_proxy, get_proxy_api
+from common.util import get_android_session
 
 DELAY_MINUTES = 10  # 10分钟一次
 EXEC_READ = 1
@@ -30,68 +28,6 @@ lock = threading.RLock()
 proxies = []
 
 
-def get_env(env_name: str) -> str:
-    log.info(f"正在读取环境变量【{env_name}】")
-    try:
-        if env_name in os.environ:
-            env_val = os.environ[env_name]
-            if len(env_val) > 0:
-                log.info(f"读取到环境变量【{env_name}】")
-                return env_val
-        log.info(f"暂未设置环境变量【{env_name}】")
-    except Exception as e:
-        log.error(f"环境变量【{env_name}】读取失败: {repr(e)}")
-    return ''
-
-
-def get_proxy_api(task_name=None) -> str:
-    api_url = ''
-    disable = get_env(ENV_DISABLE_PROXY)
-    if task_name is not None and task_name != '' and disable is not None and disable != '':
-        items = disable.split('&')
-        if task_name in items:
-            log.info('当前任务已设置禁用代理')
-            return api_url
-
-    api_url = get_env(ENV_PROXY_API)
-    if api_url is None or api_url == '':
-        log.info('暂未设置代理API，不进行代理')
-    return api_url
-
-
-def get_proxy(api_url: str) -> str:
-    """
-    提取代理
-    :param api_url: API链接
-    :return: 代理IP
-    """
-    if api_url is None or api_url == '':
-        return ''
-
-    with lock:
-        if len(proxies) <= 0:
-            for try_num in range(3):
-                try:
-                    res = requests.get(api_url)
-                    ips = re.findall('(?:\d+\.){3}\d+:\d+', res.text)
-                    if len(ips) < 1:
-                        log.error(f'API代理提取失败，响应:{res.text}')
-                        raise Exception('代理提取失败')
-                    else:
-                        [proxies.append(f'http://{ip}') for ip in ips]
-                        break
-                except:
-                    if try_num < 3 - 1:
-                        log.error(f'API代理提取失败，请检查余额或是否已添加白名单，1S后第{try_num + 1}次重试')
-                        time.sleep(1)
-                    else:
-                        log.error('API代理提取失败，请检查余额或是否已添加白名单，重试完毕')
-    proxy = proxies.pop(0) if len(proxies) > 0 else None
-    if proxy is not None:
-        log.info(f"当前代理: {proxy[7:]}")
-    return proxy
-
-
 class Tomato(object):
     sdk_version = '2'
     flame_token = ''
@@ -107,17 +43,16 @@ class Tomato(object):
     excitation_ad_repeat_cnt = None
     next_open_treasure_box = None
 
-    def __init__(self, cookies: str):
-        self.task_url = cookies.split("#")[0]
-        self.cookie = cookies.split("#")[1]
-        self.argus = cookies.split("#")[2]
-        self.ladon = cookies.split("#")[3]
-        self.ua = cookies.split("#")[4]
-        self.passport_sdk_version = cookies.split("#")[5]
+    def __init__(self, env: str):
+        self.task_url = env.split("#")[0]
+        self.cookie = env.split("#")[1]
+        self.argus = env.split("#")[2]
+        self.ladon = env.split("#")[3]
+        self.ua = env.split("#")[4]
+        self.passport_sdk_version = env.split("#")[5]
         self.params = re.findall('\?(.*?)$', self.task_url)[0]
-        self.session = requests.session()
-        self.session.mount('https://', MyAdapter())
-        self.session.headers = {
+        self.session = get_android_session()
+        headers = {
             'User-Agent': self.ua,
             'sdk-version': self.sdk_version,
             'passport-sdk-version': self.passport_sdk_version,
@@ -125,6 +60,7 @@ class Tomato(object):
             'x-ladon': self.ladon,
             'Cookie': self.cookie
         }
+        self.session.headers.update(headers)
 
     def get_username(self):
         url = 'https://api5-normal-hl.fqnovel.com/reading/user/info/v/?' + self.params
@@ -788,7 +724,7 @@ def run_task(index):
     max_retries = 3
     for try_num in range(max_retries):
         try:
-            Tomato(user_cookies[index]).run(index, API_URL, user_list[index])
+            Tomato(user_envs[index]).run(index, API_URL, user_list[index])
             return
         except:
             if try_num < max_retries - 1:
@@ -798,12 +734,6 @@ def run_task(index):
 
 
 API_URL = get_proxy_api(TASK_NAME)
-
-
-class MyAdapter(HTTPAdapter):
-    def init_poolmanager(self, connections, maxsize, block=False, **pool_kwargs):
-        self.poolmanager = PoolManager(num_pools=connections, maxsize=maxsize, block=block, ssl_version=ssl.PROTOCOL_TLSv1_2)
-
 
 if __name__ == "__main__":
     if TASK_NAME in os.environ:
@@ -815,10 +745,10 @@ if __name__ == "__main__":
     user_list = load_file(TOMATO_READ_JSON)
     [NEW_USER_JSON.append(user) for user in user_list]
 
-    user_cookies = cookies.split('&http')
-    log.info(f"环境变量读取到{len(user_cookies)}个账号")
+    user_envs = cookies.split('&http')
+    log.info(f"环境变量读取到{len(user_envs)}个账号")
     log.info(f"Json文件读取到{len(user_list)}个账号")
-    count = len(user_cookies)
+    count = len(user_envs)
     if count > len(user_list):
         count = len(user_list)
 

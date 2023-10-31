@@ -4,10 +4,8 @@ new Env('Star_其他游戏')
 """
 import random
 
-import requests
-
 from common.task import QLTask
-from common.util import log, lock
+from common.util import log, lock, get_android_session
 from HW_StarFlappy import game_record
 from HW_StarFlappy import FILE_NAME
 
@@ -39,7 +37,7 @@ class Task(QLTask):
             'User-Agent': 'Dart/2.19 (dart:io)',
             'Authorization': f'Bearer {token}'
         }
-        session = requests.session()
+        session = get_android_session()
         session.headers.update(headers)
         session.proxies = {'https': proxy}
 

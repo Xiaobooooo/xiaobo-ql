@@ -6,11 +6,11 @@ import hashlib
 import json
 import time
 
-import requests
-from requests import Session, Response
+from tls_client import Session
+from tls_client.response import Response
 
 from common.task import QLTask
-from common.util import log, write_txt, get_error_msg, UnAuthorizationException
+from common.util import log, write_txt, get_error_msg, UnAuthorizationException, get_android_session
 
 TASK_NAME = 'Star_登录'
 FILE_NAME = 'StarNetwork.txt'
@@ -66,7 +66,7 @@ class Task(QLTask):
         username = split[0]
         password = split[1]
 
-        session = requests.session()
+        session = get_android_session()
         session.headers.update({'User-Agent': 'Dart/2.19 (dart:io)'})
         session.proxies = {'https': proxy}
 

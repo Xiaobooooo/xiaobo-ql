@@ -2,7 +2,7 @@
 cron: 0 8 2-31/2 * *
 new Env('Avive_领取空投')
 """
-from requests import Session
+from tls_client import Session
 
 from DL_AviveMining import get_params, get_headers, FILE_NAME
 from common.task import QLTask

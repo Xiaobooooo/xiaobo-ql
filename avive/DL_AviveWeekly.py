@@ -4,7 +4,7 @@ new Env('Avive_每周奖励')
 """
 import json
 
-from requests import Session
+from tls_client import Session
 
 from DL_AviveMining import get_params, get_headers, FILE_NAME
 from common.task import QLTask

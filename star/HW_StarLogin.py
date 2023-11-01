@@ -66,7 +66,7 @@ class Task(QLTask):
         username = split[0]
         password = split[1]
 
-        session = get_android_session()
+        session = requests.Session()
         session.headers.update({'User-Agent': 'Dart/2.19 (dart:io)'})
         session.proxies = {'https': proxy}
 

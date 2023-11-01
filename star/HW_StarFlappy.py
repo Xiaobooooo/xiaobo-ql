@@ -44,7 +44,7 @@ class Task(QLTask):
             'User-Agent': 'Dart/2.19 (dart:io)',
             'Authorization': f'Bearer {token}'
         }
-        session = get_android_session()
+        session = requests.Session()
         session.headers.update(headers)
         session.proxies = {'https': proxy}
 

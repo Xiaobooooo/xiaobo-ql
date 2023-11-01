@@ -4,6 +4,7 @@ new Env('Star_练习游戏')
 """
 import random
 
+import requests
 from tls_client import Session
 
 from common.task import QLTask

@@ -6,6 +6,7 @@ import hashlib
 import json
 import time
 
+import requests
 from tls_client import Session
 from tls_client.response import Response
 

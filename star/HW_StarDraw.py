@@ -2,6 +2,7 @@
 cron: 0 1-23/3 * * *
 new Env('Star_抽奖')
 """
+import requests
 from tls_client import Session
 
 from common.task import QLTask

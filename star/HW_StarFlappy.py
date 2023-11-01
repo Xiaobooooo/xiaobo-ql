@@ -4,6 +4,7 @@ new Env('Star_Flappy游戏')
 """
 import datetime
 
+import requests
 from tls_client import Session
 
 from common.task import QLTask

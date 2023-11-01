@@ -4,6 +4,8 @@ new Env('Star_其他游戏')
 """
 import random
 
+import requests
+
 from common.task import QLTask
 from common.util import log, lock, get_android_session
 from HW_StarFlappy import game_record

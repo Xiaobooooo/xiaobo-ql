@@ -644,7 +644,7 @@ def pushplus_bot(title: str, content: str) -> None:
     通过 push+ 推送消息。
     """
     if not push_config.get("PUSH_PLUS_TOKEN"):
-        log.inf("PushPlus 服务的 PUSH_PLUS_TOKEN 未设置!!")
+        log.info("PushPlus 服务的 PUSH_PLUS_TOKEN 未设置!!")
         return
 
     url = "http://www.pushplus.plus/send"
@@ -659,9 +659,9 @@ def pushplus_bot(title: str, content: str) -> None:
     if not response.text.count('请求成功'):
         response = requests.post(url=url_old, json=payload)
     if response.text.count('请求成功'):
-        log.inf("PushPlus 推送成功！")
+        log.info("PushPlus 推送成功！")
     else:
-        log.inf("PushPlus 推送失败！")
+        log.info("PushPlus 推送失败！")
 
 
 if push_config.get("BARK_PUSH"):
@@ -714,14 +714,14 @@ if push_config.get("PUSHME_KEY"):
 
 def send(title: str, content: str) -> None:
     if not content:
-        log.inf(f"{title} 推送内容为空！")
+        log.info(f"{title} 推送内容为空！")
         return
 
     # 根据标题跳过一些消息推送，环境变量：SKIP_PUSH_TITLE 用回车分隔
     skip_title = os.getenv("SKIP_PUSH_TITLE")
     if skip_title:
         if title in re.split("\n", skip_title):
-            log.inf(f"{title} 在SKIP_PUSH_TITLE环境变量内，跳过推送！")
+            log.info(f"{title} 在SKIP_PUSH_TITLE环境变量内，跳过推送！")
             return
 
     hitokoto = push_config.get("HITOKOTO")

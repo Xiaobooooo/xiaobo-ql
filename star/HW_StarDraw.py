@@ -2,12 +2,11 @@
 cron: 0 1-23/3 * * *
 new Env('Star_抽奖')
 """
-import requests
 from tls_client import Session
 
 from common.task import QLTask
-from common.util import log, lock, get_android_session
-from HW_StarLogin import get_error, encrypt
+from common.util import log, get_android_session
+from HW_StarLogin import get_error, encrypt, get_headers
 from HW_StarMining import FILE_NAME
 
 TASK_NAME = 'Star_抽奖'
@@ -19,10 +18,8 @@ def draw(session: Session, uid: str) -> str:
     res = session.post('https://api.starnetwork.io/v3/event/draw', json=payload)
     if res.text.count('drawResult'):
         result = res.json()['drawResult']
-        return f'{name}成功: {result}'
-    if res.text.count('NOT_YET_FINISH'):
-        return f'{name}时间未到'
-    return get_error(name, res)
+        return f'{name}: {result}'
+    return get_error(name, res, comleted_or_waits=['NOT_YET_FINISH'])
 
 
 class Task(QLTask):
@@ -31,19 +28,13 @@ class Task(QLTask):
         uid = split[-2]
         token = split[-1]
 
-        headers = {
-            'User-Agent': 'Dart/2.19 (dart:io)',
-            'Authorization': f'Bearer {token}'
-        }
-        session = requests.Session()
-        session.headers.update(headers)
+        # session = requests.Session()
+        session = get_android_session()
+        session.headers.update(get_headers(token))
         session.proxies = {'https': proxy}
 
         result = draw(session, uid)
         log.info(f'【{index}】{result}')
-        if result.count('时间未到'):
-            with lock:
-                self.wait += 1
 
 
 if __name__ == '__main__':

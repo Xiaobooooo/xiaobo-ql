@@ -14,8 +14,14 @@ log = logging.getLogger()
 lock = threading.RLock()
 
 
-class UnAuthorizationException(Exception):
-    pass
+class UnAuthException(Exception):
+    def __init__(self, name):
+        super().__init__(f'{name}: 账号登录过期或被冻结、封禁')
+
+
+class CompletedOrWaitingException(Exception):
+    def __init__(self, name):
+        super().__init__(f'{name}: 已完成或时间未到')
 
 
 def load_txt(file_name: str) -> list:
@@ -102,11 +108,13 @@ def get_env(env_name: str) -> str:
     return ''
 
 
-def get_error_msg(name: str, response: Response, un_auths: list = None, msg_key: str = None, is_raise: bool = True) -> str:
+def get_error_msg(name: str, response: Response, completed_or_waits: list = None, un_auths: list = None, msg_key: str = None,
+                  is_raise: bool = True) -> str:
     """
     获取响应中的错误消息，并抛出异常
     :param name: 操作
     :param response: 响应
+    :param completed_or_waits: 已完成或时间未到标识
     :param un_auths: 未登录标识
     :param msg_key: 消息key
     :param is_raise: 是否抛出防火墙拦截
@@ -117,7 +125,10 @@ def get_error_msg(name: str, response: Response, un_auths: list = None, msg_key:
     body = response.json() if text.startswith('{') and text.endswith('}') else {}
     if body:
         if msg_key:
-            msg = body.get(msg_key)
+            keys = msg_key.split('|')
+            msg = body
+            for key in keys:
+                msg = msg.get(key)
         else:
             msg = body.get('msg') if body.get('msg') else body.get('message')
     if not msg:
@@ -128,45 +139,43 @@ def get_error_msg(name: str, response: Response, un_auths: list = None, msg_key:
         if text.count(intercept):
             msg = '请求被拦截'
 
+    if completed_or_waits:
+        for completed_or_wait in completed_or_waits:
+            if text.lower().count(completed_or_wait.lower()):
+                raise CompletedOrWaitingException(name)
+
     un_login = ['未登录', '登录失效', '无效Token', '请先登录', '请登录后操作']
     if un_auths:
         un_login.extend(un_auths)
     for un_auth in un_login:
         if text.lower().count(un_auth.lower()):
-            raise UnAuthorizationException(f'{name}失败: 账号登录过期或被冻结、封禁')
+            raise UnAuthException(name)
 
-    msg = f'{name}失败: {msg}'
+    msg = f'{name}: {msg}'
     if is_raise:
         raise Exception(msg)
     return msg
 
 
-def get_except(only_msg: bool = False):
-    except_type, except_value, except_traceback = sys.exc_info()
-    if only_msg:
-        return except_value
-    return f'{except_type.__name__}({except_value})'
-
-
-def get_random_session(client_list: list = None):
+def get_random_session(client_list: list = None, additional_decode: str = None):
     if not client_list:
         return get_chrome_session()
     client = client_list[random.randint(0, len(client_list) - 1)]
-    return tls_client.Session(client_identifier=client, random_tls_extension_order=True)
+    return tls_client.Session(client_identifier=client, random_tls_extension_order=True, additional_decode=additional_decode)
 
 
-def get_chrome_session():
+def get_chrome_session(additional_decode: str = None):
     chrome_list = ['chrome_103', 'chrome_104', 'chrome_105', 'chrome_106', 'chrome_107', 'chrome_108', 'chrome109', 'Chrome110',
                    'chrome111', 'chrome112']
-    return get_random_session(chrome_list)
+    return get_random_session(chrome_list, additional_decode)
 
 
-def get_android_session():
+def get_android_session(additional_decode: str = None):
     android_list = ['okhttp4_android_7', 'okhttp4_android_8', 'okhttp4_android_9', ' okhttp4_android_10', 'okhttp4_android_11',
                     'okhttp4_android_12', 'okhttp4_android_13']
-    return get_random_session(android_list)
+    return get_random_session(android_list, additional_decode)
 
 
-def get_ios_session():
+def get_ios_session(additional_decode: str = None):
     ios_list = ['safari_ios_15_5', 'safari_ios_15_6', 'safari_ios_16_0']
-    return get_random_session(ios_list)
+    return get_random_session(ios_list, additional_decode)

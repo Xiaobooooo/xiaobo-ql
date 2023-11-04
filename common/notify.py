@@ -16,6 +16,8 @@ from email.utils import formataddr
 
 import requests
 
+from common.util import log
+
 # 原先的 print 函数和主线程的锁
 _print = print
 mutex = threading.Lock()
@@ -154,7 +156,7 @@ def console(title: str, content: str) -> None:
     """
     使用 控制台 推送消息。
     """
-    print(f"{title}\n\n{content}")
+    log.info(f"{title}\n\n{content}")
 
 
 def dingding_bot(title: str, content: str) -> None:
@@ -642,9 +644,8 @@ def pushplus_bot(title: str, content: str) -> None:
     通过 push+ 推送消息。
     """
     if not push_config.get("PUSH_PLUS_TOKEN"):
-        print("PUSHPLUS 服务的 PUSH_PLUS_TOKEN 未设置!!\n取消推送")
+        log.inf("PushPlus 服务的 PUSH_PLUS_TOKEN 未设置!!")
         return
-    print("PUSHPLUS 服务启动")
 
     url = "http://www.pushplus.plus/send"
     url_old = "http://pushplus.hxtrip.com/send"
@@ -658,9 +659,9 @@ def pushplus_bot(title: str, content: str) -> None:
     if not response.text.count('请求成功'):
         response = requests.post(url=url_old, json=payload)
     if response.text.count('请求成功'):
-        print("PUSHPLUS 推送成功！")
+        log.inf("PushPlus 推送成功！")
     else:
-        print("PUSHPLUS 推送失败！")
+        log.inf("PushPlus 推送失败！")
 
 
 if push_config.get("BARK_PUSH"):
@@ -713,21 +714,20 @@ if push_config.get("PUSHME_KEY"):
 
 def send(title: str, content: str) -> None:
     if not content:
-        print(f"{title} 推送内容为空！")
+        log.inf(f"{title} 推送内容为空！")
         return
 
     # 根据标题跳过一些消息推送，环境变量：SKIP_PUSH_TITLE 用回车分隔
-    skipTitle = os.getenv("SKIP_PUSH_TITLE")
-    if skipTitle:
-        if title in re.split("\n", skipTitle):
-            print(f"{title} 在SKIP_PUSH_TITLE环境变量内，跳过推送！")
+    skip_title = os.getenv("SKIP_PUSH_TITLE")
+    if skip_title:
+        if title in re.split("\n", skip_title):
+            log.inf(f"{title} 在SKIP_PUSH_TITLE环境变量内，跳过推送！")
             return
 
     hitokoto = push_config.get("HITOKOTO")
 
     text = one() if hitokoto else ""
-    content += "\n\n" + text
-    content += "\n\n本次推送来自于: Xiaobo"
+    content = f"{content}\n\n{text}\n\n本次推送来自于: Xiaobo"
 
     ts = [
         threading.Thread(target=mode, args=(title, content), name=mode.__name__)

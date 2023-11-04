@@ -6,12 +6,11 @@ import hashlib
 import json
 import time
 
-import requests
 from tls_client import Session
 from tls_client.response import Response
 
 from common.task import QLTask
-from common.util import log, write_txt, get_error_msg, UnAuthorizationException, get_android_session
+from common.util import log, write_txt, get_error_msg, get_android_session, UnAuthException
 
 TASK_NAME = 'Star_登录'
 FILE_NAME = 'StarNetwork.txt'
@@ -27,7 +26,11 @@ def encrypt(payload, is_key: bool = False):
 
 
 def get_error(name: str, res: Response, **kwargs):
-    return get_error_msg(name, res, ['You are not authr'], **kwargs)
+    return get_error_msg(name, res, un_auths=['You are not authr'], **kwargs)
+
+
+def get_headers(token: str = '') -> dict:
+    return {'User-Agent': 'Dart/2.19 (dart:io)', 'Authorization': f'Bearer {token}'}
 
 
 def login(session: Session, username: str, password: str) -> str:
@@ -37,9 +40,11 @@ def login(session: Session, username: str, password: str) -> str:
     if res.text.count('jwt'):
         body = res.json()
         if body.get('status') == 'blocked':
-            return f'登录失败: 账号封禁'
+            raise UnAuthException(name)
         if body.get('status') == 'registered':
             return body.get('jwt')
+    if res.text.count('email_password_incorrect'):
+        return '登录: 邮箱或密码错误'
     raise get_error(name, res)
 
 
@@ -47,45 +52,38 @@ def get_uid(session: Session):
     name = '获取ID'
     res = session.get('https://api.starnetwork.io/v3/auth/user')
     if res.text.count('{"id":'):
-        uid = res.json()['id']
-        return uid
+        return res.json()['id']
     return get_error(name, res)
 
 
 class Task(QLTask):
     def __init__(self, task_name: str, file_name: str):
         super().__init__(task_name, file_name)
-        self.blocked = []
         self.success_email = []
         self.fail_email = []
 
     def task(self, index: int, text: str, proxy: str):
-        if not self.fail_email.count(text):
-            self.fail_email.append(text)
-
         split = text.split('----')
         username = split[0]
         password = split[1]
+        if not self.fail_email.count(text):
+            self.fail_email.append(text)
 
-        session = requests.Session()
-        session.headers.update({'User-Agent': 'Dart/2.19 (dart:io)'})
+        # session = requests.Session()
+        session = get_android_session()
+        session.headers.update(get_headers())
         session.proxies = {'https': proxy}
 
         result = login(session, username, password)
-        if result.count('账号封禁'):
-            self.blocked.append(text)
-            raise UnAuthorizationException(result)
-        log.info(f'【{index}】登录成功|开始获取ID')
+        if result.count('登录'):
+            log.info(f'【{index}】{result}')
+            return result
+        log.info(f'【{index}】登录: 成功')
         session.headers.update({'Authorization': f'Bearer {result}'})
         uid = get_uid(session)
+        log.info(f'【{index}】获取ID: 成功')
+        self.fail_email.remove(text)
         self.success_email.append(f'{username}----{password}----{uid}----{result}')
-
-    def statistics(self):
-        if len(self.blocked) > 0:
-            log_data = '-----封禁数据统计-----\n'
-            log_data += ''.join([f'{fail}\n' for fail in self.blocked])
-            log.info(log_data)
-        super().statistics()
 
     def save(self):
         log.info(f'-----账号文本-----')
@@ -93,16 +91,15 @@ class Task(QLTask):
         if self.success_email:
             log.info(f'-----成功文本-----')
             write_txt('StarNetworkToken', ''.join([f'{email}\n' for email in self.success_email]), True)
-        if self.blocked:
+        if self.un_auth:
             log.info(f'-----封禁文本-----')
-            write_txt('StarNetwork已封禁', ''.join([f'{email}\n' for email in self.blocked]), True)
-        if self.fail_data:
+            for un_auth in self.un_auth:
+                if self.fail_email.count(un_auth):
+                    self.fail_email.remove(un_auth)
+            write_txt('StarNetwork已封禁', ''.join([f'{un_auth}\n' for un_auth in self.un_auth]), True)
+        if self.fail_email:
             log.info(f'-----失败文本-----')
             write_txt('StarNetwork登录失败', ''.join([f'{email}\n' for email in self.fail_email]), True)
-
-    def get_push_data(self, data: str = None) -> str:
-        data = f'总任务数: {self.total}\n成功数: {self.success}\n失败数: {len(self.fail_data)}\n封禁数: {len(self.blocked)}'
-        return super().get_push_data(data)
 
 
 if __name__ == '__main__':

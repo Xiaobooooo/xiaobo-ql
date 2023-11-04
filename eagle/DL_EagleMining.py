@@ -7,7 +7,7 @@ import time
 from tls_client import Session
 
 from common.task import QLTask
-from common.util import log, lock, get_error_msg, get_android_session
+from common.util import log, get_error_msg, get_android_session
 
 TASK_NAME = "Eagle_挖矿"
 FILE_NAME = "EagleToken.txt"
@@ -17,10 +17,8 @@ def mining(session: Session) -> str:
     name = '挖矿'
     res = session.post("https://eaglenetwork.app/api/start-mining", json={})
     if res.text.count('start_time') > 0:
-        return f'{name}成功'
-    if res.text.count('Mining Already Started') > 0:
-        return f'{name}时间未到'
-    return get_error_msg(name, res)
+        return f'{name}: 成功'
+    return get_error_msg(name, res, ['Mining Already Started'])
 
 
 class Task(QLTask):
@@ -30,7 +28,7 @@ class Task(QLTask):
 
         headers = {
             'UserAgent': 'android 1.0.65',
-            'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 9; HD1910 Build/PQ3B.190801.002)',
+            'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 9; LIO-AN00 Build/PQ3B.190801.002)',
             'AuthToken': token
         }
         session = get_android_session()
@@ -39,9 +37,6 @@ class Task(QLTask):
 
         result = mining(session)
         log.info(f"【{index}】{result}，延迟1秒后结束")
-        if result.count('时间未到'):
-            with lock:
-                self.wait += 1
         time.sleep(1)
 
 

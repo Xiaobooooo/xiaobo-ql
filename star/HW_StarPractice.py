@@ -4,12 +4,11 @@ new Env('Star_练习游戏')
 """
 import random
 
-import requests
 from tls_client import Session
 
 from common.task import QLTask
 from common.util import log, get_android_session
-from HW_StarLogin import get_error, encrypt
+from HW_StarLogin import get_error, encrypt, get_headers
 from HW_StarMining import FILE_NAME
 
 TASK_NAME = 'Star_练习游戏'
@@ -21,7 +20,7 @@ def practice(session: Session, game: str, score: str) -> str:
     res = session.post('https://api.starnetwork.io/v3/game/record', json=payload)
     if res.text.count('id'):
         result = '获得奖励' if res.text.count('REWARDED') else '未获得奖励'
-        return f'{name}成功: {result}'
+        return f'{name}[{game}]: {result}'
     return get_error(name, res)
 
 
@@ -30,16 +29,9 @@ class Task(QLTask):
         split = text.split('----')
         token = split[-1]
 
-        # delay = random.randint(10, 120)
-        # log.info(f"【{index}】随机延迟{delay}秒后开始")
-        # time.sleep(delay)
-
-        headers = {
-            'User-Agent': 'Dart/2.19 (dart:io)',
-            'Authorization': f'Bearer {token}'
-        }
-        session = requests.Session()
-        session.headers.update(headers)
+        # session = requests.Session()
+        session = get_android_session()
+        session.headers.update(get_headers(token))
         session.proxies = {'https': proxy}
 
         games = ['ballz', 'block_puzzle', 'brain_workout', 'puzzle_2048', 'sudoku', 'flappy']
@@ -51,7 +43,7 @@ class Task(QLTask):
             else:
                 score = str(random.randint(8888, 10000))
             result = practice(session, game, score)
-            log.info(f'【{index}】[{game}]{result}')
+            log.info(f'【{index}】{result}')
 
 
 if __name__ == '__main__':

@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 from concurrent import futures
 
 from common.notify import send
-from common.util import log, lock, load_txt, get_env, get_except, get_random_session, UnAuthorizationException
+from common.util import log, lock, load_txt, get_env, get_random_session, UnAuthException, CompletedOrWaitingException
 
 ENV_THREAD_NUMBER = 'THREAD_NUMBER'
 ENV_PROXY_API = 'PROXY_API'
@@ -177,25 +177,34 @@ class QLTask(metaclass=ABCMeta):
                     self.fail_data.append(f'【{index}】{result}')
                     return False
                 return True
-            except UnAuthorizationException:
-                log.error(f'【{index}】{get_except(True)}')
+            except CompletedOrWaitingException as e:
+                log.error(f'【{index}】{e}')
+                with lock:
+                    self.wait += 1
+                return True
+            except UnAuthException as e:
+                log.error(f'【{index}】{e}')
                 self.un_auth.append(text)
                 return False
-            except:
+            except Exception as e:
                 if try_num < self.max_retries - 1:
-                    log.error(f'【{index}】进行第{try_num + 1}次重试: {get_except()}')
+                    log.error(f'【{index}】进行第{try_num + 1}次重试: {repr(e)}')
                     proxy = get_proxy(self.api_url, index)
                 else:
-                    log.error(f'【{index}】重试完毕: {get_except()}')
-                    self.fail_data.append(f'【{index}】{get_except()}')
+                    log.error(f'【{index}】重试完毕: {repr(e)}')
+                    self.fail_data.append(f'【{index}】{repr(e)}')
         return False
 
     def statistics(self):
         """数据统计"""
         if self.fail_data:
             log_data = '-----失败数据统计-----\n'
-            log_data += ''.join([f'{fail}\n' for fail in self.fail_data])
-            log.info(log_data[:-1])
+            log_data += '\n'.join([fail for fail in self.fail_data])
+            log.info(log_data)
+        if self.un_auth:
+            log_data = '-----过期封禁数据统计-----\n'
+            log_data += '\n'.join([un_auth for un_auth in self.un_auth])
+            log.info(log_data)
 
     def get_push_data(self, data: str = None) -> str:
         """
@@ -204,7 +213,8 @@ class QLTask(metaclass=ABCMeta):
         :return: 推送数据
         """
         if not data:
-            data = f'总任务数: {self.total}\n成功数: {self.success} (其中时间未到数: {self.wait})\n失败数: {len(self.fail_data)} (其中登录过期或封禁数: {len(self.un_auth)})'
+            data = f'总任务数: {self.total}\n任务成功数: {self.success} {f"(其中已完成或未到时间数: {self.wait})" if self.wait else ""}'
+            data = f'{data}\n任务失败数: {len(self.fail_data)} {f"(其中登录过期或封禁数: {len(self.un_auth)})" if self.un_auth else ""}'
         if self.notice:
             data = f'{data}\n\n{self.notice}'
         return data

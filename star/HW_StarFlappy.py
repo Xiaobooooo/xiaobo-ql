@@ -4,7 +4,6 @@ new Env('Star_Flappy游戏')
 """
 import datetime
 
-import requests
 from tls_client import Session
 
 from common.task import QLTask
@@ -18,7 +17,7 @@ FILE_NAME = 'StarNetworkGameToken.txt'
 def game_record(session: Session, game: str, score: str) -> str:
     name = '完成游戏'
     payload = encrypt({"game": game, "mode": "tournament", "score": score, "extra": False}, True)
-    res = session.post('https://api.starnetwork.io/v3/game/record', json=payload)
+    res = session.post('https://api.starnetwork.io/v3/game/record', json=payload, timeout_seconds=300)
     if res.text.count('id') and res.text.count('SAVED'):
         return f'{name}: 成功'
     if res.text.count('Service Unavailable'):
@@ -35,8 +34,8 @@ class Task(QLTask):
             log.info(f'【{index}】不完成此任务')
             return
 
-        session = requests.Session()
-        # session = get_android_session()
+        # session = requests.Session()
+        session = get_android_session()
         session.headers.update(get_headers(token))
         session.proxies = proxy
 

@@ -72,7 +72,7 @@ class Task(QLTask):
         # session = requests.Session()
         session = get_android_session()
         session.headers.update(get_headers())
-        session.proxies = {'https': proxy}
+        session.proxies = proxy
 
         result = login(session, username, password)
         if result.count('登录'):

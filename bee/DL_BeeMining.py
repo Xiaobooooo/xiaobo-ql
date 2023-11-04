@@ -41,7 +41,7 @@ class Task(QLTask):
         }
         session = requests.session()
         session.headers.update(headers)
-        session.proxies = {"https": proxy}
+        session.proxies = proxy
 
         result = mining(session)
         log.info(f"【{index}】{result}")

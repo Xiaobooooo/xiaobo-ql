@@ -105,6 +105,7 @@ def get_proxy(api_url: str, index: int = None) -> str:
     proxy = proxies.pop(0) if len(proxies) > 0 else None
     if proxy:
         log.info(f'{mark}当前代理: {proxy}')
+        proxy = f'http://{proxy}'
     return proxy
 
 
@@ -122,8 +123,8 @@ class QLTask(metaclass=ABCMeta):
             try:
                 self.notice = get_random_session().get('https://static.xiaobooooo.com/text/notice').text
                 log.info(f'\n{self.notice}')
-            except:
-                log.error('公告加载失败')
+            except Exception as e:
+                log.error(f'公告加载失败: {repr(e)}')
             log.info('==========公告==========\n')
         log.info('=====开始加载配置=====')
         self.lines = load_txt(self.file_name)

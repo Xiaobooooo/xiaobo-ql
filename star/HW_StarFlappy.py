@@ -4,6 +4,7 @@ new Env('Star_Flappy游戏')
 """
 import datetime
 
+import requests
 from tls_client import Session
 
 from common.task import QLTask
@@ -34,10 +35,10 @@ class Task(QLTask):
             log.info(f'【{index}】不完成此任务')
             return
 
-        # session = requests.Session()
-        session = get_android_session()
+        session = requests.Session()
+        # session = get_android_session()
         session.headers.update(get_headers(token))
-        session.proxies = {'https': proxy}
+        session.proxies = proxy
 
         second = float(datetime.datetime.now().strftime('%S.%f'))
         if second >= 55 or second <= 10:

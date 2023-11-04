@@ -33,7 +33,7 @@ class Task(QLTask):
 
         session = get_android_session()
         session.headers.update(get_headers(token))
-        session.proxies = {'https': proxy}
+        session.proxies = proxy
 
         result = sign(session)
         log.info(f'【{index}】{result}')

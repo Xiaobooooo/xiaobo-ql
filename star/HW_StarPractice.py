@@ -32,7 +32,7 @@ class Task(QLTask):
         # session = requests.Session()
         session = get_android_session()
         session.headers.update(get_headers(token))
-        session.proxies = {'https': proxy}
+        session.proxies = proxy
 
         games = ['ballz', 'block_puzzle', 'brain_workout', 'puzzle_2048', 'sudoku', 'flappy']
         for game in games:

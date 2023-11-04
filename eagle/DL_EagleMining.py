@@ -33,7 +33,7 @@ class Task(QLTask):
         }
         session = get_android_session()
         session.headers.update(headers)
-        session.proxies = {"https": proxy}
+        session.proxies = proxy
 
         result = mining(session)
         log.info(f"【{index}】{result}，延迟1秒后结束")

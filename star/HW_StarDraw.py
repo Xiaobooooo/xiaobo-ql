@@ -19,7 +19,7 @@ def draw(session: Session, uid: str) -> str:
     if res.text.count('drawResult'):
         result = res.json()['drawResult']
         return f'{name}: {result}'
-    return get_error(name, res, comleted_or_waits=['NOT_YET_FINISH'])
+    return get_error(name, res, completed_or_waits=['NOT_YET_FINISH'])
 
 
 class Task(QLTask):

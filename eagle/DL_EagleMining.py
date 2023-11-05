@@ -23,6 +23,8 @@ def mining(session: Session) -> str:
 
 class Task(QLTask):
     def task(self, index: int, text: str, proxy: str):
+        if not proxy:
+            time.sleep(1)
         split = text.split('----')
         token = split[-1]
 
@@ -36,8 +38,7 @@ class Task(QLTask):
         session.proxies = proxy
 
         result = mining(session)
-        log.info(f"【{index}】{result}，延迟1秒后结束")
-        time.sleep(1)
+        log.info(f"【{index}】{result}")
 
 
 if __name__ == '__main__':

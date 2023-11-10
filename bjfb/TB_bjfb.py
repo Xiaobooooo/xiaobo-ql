@@ -1,9 +1,10 @@
 """
-cron: 0 8 * * *
+cron: 59 7 * * *
 new Env('滨江发布_兑换')
 """
 import random
 import string
+import time
 
 import execjs
 from tls_client import Session
@@ -75,7 +76,9 @@ class Task(QLTask):
         session.headers.update(headers)
         session.proxies = proxy
 
+        time.sleep(55)
         timestamp = get_time(session)
+        time.sleep(3)
         if dh == 'HF':
             result = dh_hf(session, timestamp)
             log.info(f'【{index}】{result}')

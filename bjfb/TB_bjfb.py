@@ -62,6 +62,7 @@ class Task(QLTask):
     def __init__(self, task_name: str, file_name: str):
         super().__init__(task_name, file_name, False)
         self.max_retries = 15
+        time.sleep(58)
 
     def task(self, index: int, text: str, proxy: str):
         split = text.split('----')
@@ -76,9 +77,7 @@ class Task(QLTask):
         session.headers.update(headers)
         session.proxies = proxy
 
-        time.sleep(55)
         timestamp = get_time(session)
-        time.sleep(3)
         if dh == 'HF':
             result = dh_hf(session, timestamp)
             log.info(f'【{index}】{result}')

@@ -1,5 +1,5 @@
 """
-cron: 59 7 * * *
+cron: 59 9 * * *
 new Env('滨江发布_兑换')
 """
 import random

@@ -7,6 +7,7 @@ import string
 import time
 
 import execjs
+import requests
 from tls_client import Session
 
 from common.task import QLTask
@@ -31,7 +32,7 @@ def get_time(session: Session) -> str:
 
 def dh_hf(session: Session, timestamp: str) -> str:
     name = '兑换10元话费'
-    data = '{"ifDeductPoints":1,"marketingActivityGoodsId":"1719269537172381697","marketingActivityId":"1719269536962666497","num":1,"priceDetailDTOS":[{"points":1000,"priceType":2,"priceValue":500},{"points":0,"priceType":1,"priceValue":0}],"goodsGroupDTOS":[{"freight":0,"goodsPrice":0,"serviceCode":"wnzc","skuDTOS":[{"num":1,"serviceCode":"wnzc","skuId":"CBA040010DA","skuMarketPrice":"1000","salePrice":1000,"skuListPicUrl":"//ossimage.jifenfu.net/goodsBusiness/APPGoodsIcon/DA040008_4.jpg","skuName":"三网话费10元","preSaleType":"","preSalePostDelayDays":"","preSalePostDate":"","goodsPriceType":1,"points":"1000","cashAmount":1000,"skuStatus":1,"specSnapshot":"[{\\"specId\\":\\"6003\\",\\"specName\\":\\"规格\\",\\"specValueId\\":\\"1116\\",\\"specValue\\":\\"10元\\"}]","spuId":"6003","inventory":99,"goodsPriceShowDTO":{"goodsPriceShowType":1,"cashAmount":null,"points":2000},"ifServerCard":null,"ifDeductBenefitCard":0,"ifErpPriceType":0,"isActivity":1,"marketingActivityGoodsId":"1719269537172381697","marketingActivityId":"1719269536962666497","activityPrice":"0","goodsExtJson":{"ext":"[]","priceOriginType":1,"ifCurrentUserRechargeAccount":1,"currentUserRechargeAccountType":2},"activityPriceThreshold":0,"ifActivityPriceThreshold":0,"ifLimitArea":0,"commonDisplayExtData":{"errCodeMsg":[]},"rechargeAccount":"","rechargeType":"RA000001","goodsDisplayExtJson":{},"priceShowTypeSnapshot":"{\\"goodsPriceShowType\\":1,\\"cashAmount\\":null,\\"points\\":2000}"}]}],"totalPrice":0,"rechargeAccount":"","rechargeType":"RA000001","skuOrderUserInfoDTO":[{"serviceCode":"wnzc","spuId":"6003","skuId":"CBA040010DA","skuName":"三网话费10元","submitUserinfo":{"rechargeType":"RA000001","ext":{"addressId":null}}}]}'
+    data = '{"ifDeductPoints":1,"marketingActivityGoodsId":"1696823088732135425","marketingActivityId":"1696823088530808833","num":1,"priceDetailDTOS":[{"points":2000,"priceType":2,"priceValue":1000},{"points":0,"priceType":1,"priceValue":0}],"goodsGroupDTOS":[{"freight":0,"goodsPrice":0,"serviceCode":"wnzc","skuDTOS":[{"num":1,"serviceCode":"wnzc","skuId":"CBA040010DA","skuMarketPrice":"1000","salePrice":1000,"skuListPicUrl":"//ossimage.jifenfu.net/goodsBusiness/APPGoodsIcon/DA040008_2.jpg","skuName":"三网话费10元","preSaleType":"","preSalePostDelayDays":"","preSalePostDate":"","goodsPriceType":1,"points":"2000","cashAmount":1000,"skuStatus":1,"specSnapshot":"[{\"specId\":\"6003\",\"specName\":\"规格\",\"specValueId\":\"1116\",\"specValue\":\"10元\"}]","spuId":"6003","inventory":99,"goodsPriceShowDTO":{"goodsPriceShowType":1,"cashAmount":null,"points":2000},"ifServerCard":null,"ifDeductBenefitCard":0,"ifErpPriceType":0,"isActivity":1,"marketingActivityGoodsId":"1696823088732135425","marketingActivityId":"1696823088530808833","activityPrice":"0","goodsExtJson":{"ext":"[]","priceOriginType":1,"ifCurrentUserRechargeAccount":1,"currentUserRechargeAccountType":2},"activityPriceThreshold":0,"ifActivityPriceThreshold":0,"ifLimitArea":0,"commonDisplayExtData":{"errCodeMsg":[]},"rechargeAccount":"","rechargeType":"RA000001","goodsDisplayExtJson":{},"priceShowTypeSnapshot":"{\"goodsPriceShowType\":1,\"cashAmount\":null,\"points\":2000}"}]}],"totalPrice":0,"rechargeAccount":"","rechargeType":"RA000001","skuOrderUserInfoDTO":[{"serviceCode":"wnzc","spuId":"6003","skuId":"CBA040010DA","skuName":"三网话费10元","submitUserinfo":{"rechargeType":"RA000001","ext":{"addressId":null}}}]}'
     url = 'https://service.jifenfu.net/sspmarketingactivity-service/client/marketing/order/activity/create'
     update_headers(session, data, timestamp)
     res = session.post(url, data=data)
@@ -42,7 +43,7 @@ def dh_hf(session: Session, timestamp: str) -> str:
 
 def dh_ek(session: Session, timestamp: str) -> str:
     name = '兑换10京东E卡'
-    data = '{"ifDeductPoints":1,"marketingActivityGoodsId":"1719269537302405121","marketingActivityId":"1719269536962666497","num":1,"priceDetailDTOS":[{"points":1000,"priceType":2,"priceValue":500},{"points":0,"priceType":1,"priceValue":0}],"goodsGroupDTOS":[{"freight":0,"goodsPrice":0,"serviceCode":"wnkq","skuDTOS":[{"num":1,"serviceCode":"wnkq","skuId":"AGA0100A0IA","skuMarketPrice":"1000","salePrice":1000,"skuListPicUrl":"//ossimage.jifenfu.net/erpadmin/default/20210525/f69ade47-779e-4358-bb82-dad9055c19f0.jpg","skuName":"京东E卡10元","preSaleType":"","preSalePostDelayDays":"","preSalePostDate":"","goodsPriceType":1,"points":"1000","cashAmount":1000,"skuStatus":1,"specSnapshot":"[{\\"specId\\":\\"7069\\",\\"specName\\":\\"规格\\",\\"specValueId\\":\\"1005\\",\\"specValue\\":\\"10元\\"}]","spuId":"7069","inventory":10,"goodsPriceShowDTO":{"goodsPriceShowType":1,"cashAmount":null,"points":2000},"ifServerCard":null,"ifDeductBenefitCard":0,"ifErpPriceType":0,"useDescription":"//ossimage.jifenfu.net/erpadmin/default/20210929/aa287693-d020-4f09-8161-9c871d87d6bb.html","isActivity":1,"marketingActivityGoodsId":"1719269537302405121","marketingActivityId":"1719269536962666497","activityPrice":"0","goodsExtJson":[],"activityPriceThreshold":0,"ifActivityPriceThreshold":0,"ifLimitArea":0,"commonDisplayExtData":{"errCodeMsg":[]},"goodsDisplayExtJson":{},"priceShowTypeSnapshot":"{\\"goodsPriceShowType\\":1,\\"cashAmount\\":null,\\"points\\":2000}"}]}],"totalPrice":0,"skuOrderUserInfoDTO":[]}'
+    data = '{"ifDeductPoints":1,"marketingActivityGoodsId":"1696823088648249345","marketingActivityId":"1696823088530808833","num":1,"priceDetailDTOS":[{"points":2000,"priceType":2,"priceValue":1000},{"points":0,"priceType":1,"priceValue":0}],"goodsGroupDTOS":[{"freight":0,"goodsPrice":0,"serviceCode":"wnkq","skuDTOS":[{"num":1,"serviceCode":"wnkq","skuId":"AGA0100A0IA","skuMarketPrice":"1000","salePrice":1000,"skuListPicUrl":"//ossimage.jifenfu.net/erpadmin/default/20210525/f7ce2a83-23d9-4cb2-bbff-8a20bbe6b0d2.jpg","skuName":"京东E卡10元","preSaleType":"","preSalePostDelayDays":"","preSalePostDate":"","goodsPriceType":1,"points":"2000","cashAmount":1000,"skuStatus":1,"specSnapshot":"[{\"specId\":\"7069\",\"specName\":\"规格\",\"specValueId\":\"1005\",\"specValue\":\"10元\"}]","spuId":"7069","inventory":10,"goodsPriceShowDTO":{"goodsPriceShowType":1,"cashAmount":null,"points":2000},"ifServerCard":null,"ifDeductBenefitCard":0,"ifErpPriceType":0,"useDescription":"//ossimage.jifenfu.net/erpadmin/default/20210929/aa287693-d020-4f09-8161-9c871d87d6bb.html","isActivity":1,"marketingActivityGoodsId":"1696823088648249345","marketingActivityId":"1696823088530808833","activityPrice":"0","goodsExtJson":[],"activityPriceThreshold":0,"ifActivityPriceThreshold":0,"ifLimitArea":0,"commonDisplayExtData":{"errCodeMsg":[]},"goodsDisplayExtJson":{},"priceShowTypeSnapshot":"{\"goodsPriceShowType\":1,\"cashAmount\":null,\"points\":2000}"}]}],"totalPrice":0,"skuOrderUserInfoDTO":[]}'
     url = 'https://service.jifenfu.net/sspmarketingactivity-service/client/marketing/order/activity/create'
     update_headers(session, data, timestamp)
     res = session.post(url, data=data)
@@ -61,8 +62,8 @@ def update_headers(session: Session, data: str, timestamp: str):
 class Task(QLTask):
     def __init__(self, task_name: str, file_name: str):
         super().__init__(task_name, file_name, False)
-        self.max_retries = 15
-        time.sleep(58)
+        self.max_retries = 10
+        # time.sleep(58)
 
     def task(self, index: int, text: str, proxy: str):
         split = text.split('----')
@@ -71,6 +72,7 @@ class Task(QLTask):
         headers = {
             'Cookie': cookies,
             'Content-Type': 'application/json;charset=utf-8',
+            'Referer': 'https://service.jifenfu.net/sspmall-front/index.html',
             'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_3_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148'
         }
         session = get_chrome_session()

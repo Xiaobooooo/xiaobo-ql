@@ -30,7 +30,7 @@ class Task(QLTask):
         session.headers.update(get_headers(token))
         session.proxies = proxy
 
-        score = str(random.randint(2333, 9999))
+        score = random.randint(2333, 9999)
         result = game_record(session, game, score)
         log.info(f'【{index}】{result}')
 

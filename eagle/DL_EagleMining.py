@@ -29,7 +29,7 @@ class Task(QLTask):
         token = split[-1]
 
         headers = {
-            'UserAgent': 'android 1.0.65',
+            'UserAgent': 'android 1.0.73',
             'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 9; LIO-AN00 Build/PQ3B.190801.002)',
             'AuthToken': token
         }

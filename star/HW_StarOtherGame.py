@@ -4,6 +4,8 @@ new Env('Star_其他游戏')
 """
 import random
 
+import requests
+
 from common.task import QLTask
 from common.util import log, get_android_session
 from HW_StarFlappy import game_record
@@ -25,10 +27,10 @@ class Task(QLTask):
             log.info(f'【{index}】不完成此任务')
             return
 
-        # session = requests.Session()
-        session = get_android_session()
+        session = requests.Session()
+        # session = get_android_session()
         session.headers.update(get_headers(token))
-        session.proxies = proxy
+        session.proxies = {'https': proxy}
 
         score = random.randint(2333, 9999)
         result = game_record(session, game, score)

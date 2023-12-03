@@ -6,6 +6,7 @@ import hashlib
 import json
 import time
 
+import requests
 from tls_client import Session
 from tls_client.response import Response
 
@@ -69,10 +70,10 @@ class Task(QLTask):
         if not self.fail_email.count(text):
             self.fail_email.append(text)
 
-        # session = requests.Session()
-        session = get_android_session()
+        session = requests.Session()
+        # session = get_android_session()
         session.headers.update(get_headers())
-        session.proxies = proxy
+        session.proxies = {'https': proxy}
 
         result = login(session, username, password)
         if result.count('登录'):

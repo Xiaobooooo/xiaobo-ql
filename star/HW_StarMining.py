@@ -2,6 +2,7 @@
 cron: 0 0-23/2 * * *
 new Env('Star_挖矿')
 """
+import requests
 from tls_client import Session
 
 from common.task import QLTask
@@ -25,10 +26,10 @@ class Task(QLTask):
         split = text.split('----')
         token = split[-1]
 
-        # session = requests.Session()
-        session = get_android_session()
+        session = requests.Session()
+        # session = get_android_session()
         session.headers.update(get_headers(token))
-        session.proxies = proxy
+        session.proxies = {'https': proxy}
 
         result = mining(session)
         log.info(f'【{index}】{result}')

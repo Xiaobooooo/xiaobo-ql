@@ -4,6 +4,7 @@ new Env('Star_练习游戏')
 """
 import random
 
+import requests
 from tls_client import Session
 
 from common.task import QLTask
@@ -29,10 +30,10 @@ class Task(QLTask):
         split = text.split('----')
         token = split[-1]
 
-        # session = requests.Session()
-        session = get_android_session()
+        session = requests.Session()
+        # session = get_android_session()
         session.headers.update(get_headers(token))
-        session.proxies = proxy
+        session.proxies = {'https': proxy}
 
         games = ['ballz', 'block_puzzle', 'brain_workout', 'puzzle_2048', 'sudoku', 'flappy']
         for game in games:

@@ -10,7 +10,7 @@ from web3 import Web3, HTTPProvider
 
 from common.task import QLTask
 from common.util import log, get_chrome_session, get_error_msg
-from Qna3CheckIn import login, contract_address
+from HW_Qna3CheckIn import login, contract_address
 
 TASK_NAME = 'Qna3领取'
 FILE_NAME = 'Qna3Wallet.txt'

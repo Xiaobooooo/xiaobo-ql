@@ -110,7 +110,7 @@ def get_proxy(api_url: str, index: int = None) -> str:
 
 
 class QLTask(metaclass=ABCMeta):
-    def __init__(self, task_name: str, file_name: str, load_notice: bool = True):
+    def __init__(self, task_name: str, file_name: str, load_notice: bool = False):
         self.wait = 0
         self.success = 0
         self.task_name = task_name

@@ -6,21 +6,14 @@ import time
 
 from eth_typing import ChecksumAddress
 from tls_client import Session
-from web3 import Web3, HTTPProvider
+from web3 import Web3
 
 from common.task import QLTask
-from common.util import log, get_env, get_chrome_session, get_error_msg
+from common.util import log, get_chrome_session, get_error_msg
+from HW_ZetaXpEnroll import zeta
 
 TASK_NAME = 'Zeta_交互'
 FILE_NAME = 'ZetaWallet.txt'
-
-RPC_NAME = 'Zeta_RPC'
-rpc = get_env(RPC_NAME)
-if rpc is None or rpc == '':
-    rpc = "https://zetachain-evm.blockpi.network/v1/rpc/public"
-    log.info(f"暂未设置RPC，默认RPC: {rpc}")
-
-zeta = Web3(HTTPProvider(rpc))
 
 
 def send_zeta(address: ChecksumAddress, private_key: str) -> str:

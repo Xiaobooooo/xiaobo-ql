@@ -22,7 +22,7 @@ invite_code = get_env(INVITE_CODE_NAME)
 if not invite_code:
     log.info("暂未设置邀请码INVITE_CODE")
 
-RPC_NAME = 'Zeta_RPC'
+RPC_NAME = 'ZETA_RPC'
 rpc = get_env(RPC_NAME)
 if rpc is None or rpc == '':
     rpc = "https://zetachain-evm.blockpi.network/v1/rpc/public"

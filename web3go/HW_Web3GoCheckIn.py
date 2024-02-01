@@ -1,5 +1,5 @@
 """
-cron: 0 8 * * *
+cron: 0 10 * * *
 new Env('Web3Go_签到')
 """
 import json
@@ -11,7 +11,7 @@ from eth_typing import ChecksumAddress
 from tls_client import Session
 
 from common.task import QLTask
-from common.util import log, get_chrome_session, get_error_msg
+from common.util import log, get_error_msg
 from HW_Web3GoMint import bsc
 
 TASK_NAME = 'Web3Go_签到'
@@ -57,6 +57,7 @@ class Task(QLTask):
         session.headers.update(headers)
         session.proxies = proxy
         token = login(session, address, private_key)
+        log.info(f'【{index}】登录成功')
         session.headers.update({'Authorization': 'Bearer ' + token})
         result = check_in(session)
         log.info(f'【{index}】{result}')

@@ -1,5 +1,5 @@
 """
-cron: 0 8 * * *
+cron: 1 1 1 1 1
 new Env('Web3Go_Mint')
 """
 from eth_typing import ChecksumAddress

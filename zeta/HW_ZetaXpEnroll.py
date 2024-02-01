@@ -17,6 +17,11 @@ from common.util import log, get_env, get_chrome_session, get_error_msg
 TASK_NAME = 'Zeta_XP注册'
 FILE_NAME = 'ZetaWallet.txt'
 
+INVITE_CODE_NAME = 'ZETA_INVITE_CODE'
+invite_code = get_env(INVITE_CODE_NAME)
+if not invite_code:
+    log.info("暂未设置邀请码INVITE_CODE")
+
 RPC_NAME = 'Zeta_RPC'
 rpc = get_env(RPC_NAME)
 if rpc is None or rpc == '':
@@ -36,27 +41,27 @@ abi = [{"inputs": [{"internalType": "address", "name": "inviter", "type": "addre
 contract_address = zeta.to_checksum_address('0x3C85e0cA1001F085A3e58d55A0D76E2E8B0A33f9')
 contract = zeta.eth.contract(address=contract_address, abi=abi)
 
-invite_code = 'YWRkcmVzcz0weDgwQjhCZURCYjI1N2UxMjQ4MDljYUI2MzdmZUY0MDc3RTAyNDYzMTEmZXhwaXJhdGlvbj0xNzA2OTg4NTg4JnI9MHgyMDJhY2E3OTM4MjNjYmRkY2E3YTMzM2MwYzQ5YzI0NzgxNmYxNDVhNjc0OTI1OTQxNmRhMTBkMzU3ZGJiODAxJnM9MHgxOWVmOGZlOTE5YjMxY2ZkNGJjMjJlMDM4OWJjOTBmZDQxNWNiMDBjMDRkZmVjYTk2YjQ4OTNmOWFkMzYxOTZkJnY9Mjg='
-
 
 def send_enroll(address: ChecksumAddress, private_key: str) -> str:
     nonce = zeta.eth.get_transaction_count(address)
-    parsed_dict = parse_qs(base64.b64decode(invite_code).decode())
-    method = contract.functions.confirmAndAcceptInvitation(zeta.to_checksum_address(parsed_dict.get('address')[0]),
-                                                           int(parsed_dict.get('expiration')[0]),
-                                                           (int(parsed_dict.get('v')[0]), parsed_dict.get('r')[0],
-                                                            parsed_dict.get('s')[0]))
-    try:
-        tx = method.build_transaction({'from': address, 'gasPrice': zeta.eth.gas_price, 'nonce': nonce})
-    except ContractLogicError as e:
-        return str(e)
-    # gas_price = zeta.eth.gas_price
-    # tx = {'from': address, 'to': contract_address, 'data': '0x90c08473', 'nonce': nonce, 'maxFeePerGas': int(gas_price * 1.2),
-    #       'maxPriorityFeePerGas': int(gas_price * 1.1), 'chainId': zeta.eth.chain_id}
-    # try:
-    #     tx['gas'] = zeta.eth.estimate_gas(tx)
-    # except ContractLogicError as e:
-    #     return str(e)
+    if invite_code:
+        parsed_dict = parse_qs(base64.b64decode(invite_code).decode())
+        method = contract.functions.confirmAndAcceptInvitation(zeta.to_checksum_address(parsed_dict.get('address')[0]),
+                                                               int(parsed_dict.get('expiration')[0]),
+                                                               (int(parsed_dict.get('v')[0]), parsed_dict.get('r')[0],
+                                                                parsed_dict.get('s')[0]))
+        try:
+            tx = method.build_transaction({'from': address, 'gasPrice': zeta.eth.gas_price, 'nonce': nonce})
+        except ContractLogicError as e:
+            return str(e)
+    else:
+        gas_price = zeta.eth.gas_price
+        tx = {'from': address, 'to': contract_address, 'data': '0x90c08473', 'nonce': nonce, 'maxFeePerGas': int(gas_price * 1.2),
+              'maxPriorityFeePerGas': int(gas_price * 1.1), 'chainId': zeta.eth.chain_id}
+        try:
+            tx['gas'] = zeta.eth.estimate_gas(tx)
+        except ContractLogicError as e:
+            return str(e)
     signed_tx = zeta.eth.account.sign_transaction(tx, private_key)
     transaction = zeta.eth.send_raw_transaction(signed_tx.rawTransaction)
     zeta.eth.wait_for_transaction_receipt(transaction)

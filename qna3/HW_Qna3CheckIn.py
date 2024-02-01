@@ -1,6 +1,6 @@
 """
 cron: 0 10 * * *
-new Env('Qna3签到')
+new Env('Qna3_签到')
 """
 import sys
 import time
@@ -13,7 +13,7 @@ from web3 import Web3, HTTPProvider
 from common.task import QLTask
 from common.util import log, get_chrome_session, get_error_msg, get_env
 
-TASK_NAME = 'Qna3签到'
+TASK_NAME = 'Qna3_签到'
 FILE_NAME = 'Qna3Wallet.txt'
 
 INVITE_CODE_NAME = 'QNA3_INVITE_CODE'
@@ -40,11 +40,9 @@ else:
     sys.exit()
 
 contract_address = bsc.to_checksum_address('0xb342e7d33b806544609370271a8d074313b7bc30')
-abi = [{"constant": False, "inputs": [{"name": "param_uint256_1", "type": "uint256"}], "name": "checkIn", "outputs": [],
-        "payable": False, "stateMutability": "nonpayable", "type": "function"},
-       {"constant": False, "inputs": [{"name": "activityIndex", "type": "uint256"}, {"name": "id", "type": "uint256"},
-                                      {"name": "credit", "type": "uint32"}], "name": "vote", "outputs": [], "payable": False,
-        "stateMutability": "nonpayable", "type": "function"}]
+abi = [{"inputs": [{"name": "param_uint256_1", "type": "uint256"}], "name": "checkIn", "outputs": [], "type": "function"},
+       {"inputs": [{"name": "activityIndex", "type": "uint256"}, {"name": "id", "type": "uint256"},
+                   {"name": "credit", "type": "uint32"}], "name": "vote", "outputs": [], "type": "function"}]
 contract = bsc.eth.contract(address=contract_address, abi=abi)
 
 
@@ -70,14 +68,14 @@ def query_check_in(session: Session) -> str:
     return get_error_msg(name, res)
 
 
-def send_check_in(address: ChecksumAddress, private_key: str) -> (str, int):
+def send_check_in(address: ChecksumAddress, private_key: str) -> str:
     nonce = bsc.eth.get_transaction_count(address)
     method = contract.functions.checkIn(1)
     tx = method.build_transaction({'gas': 33333, 'gasPrice': bsc.eth.gas_price, 'nonce': nonce})
     signed_tx = bsc.eth.account.sign_transaction(tx, private_key)
     transaction = bsc.eth.send_raw_transaction(signed_tx.rawTransaction)
-    block_number = bsc.eth.wait_for_transaction_receipt(transaction).blockNumber
-    return transaction.hex(), block_number
+    bsc.eth.wait_for_transaction_receipt(transaction)
+    return transaction.hex()
 
 
 def check_in(session: Session, tx_hash) -> str:
@@ -108,8 +106,8 @@ class Task(QLTask):
         if result:
             log.info(f'【{index}】签到: 今日已签到')
             return
-        tx_hash, block_number = send_check_in(address, private_key)
-        log.info(f'【{index}】签到交易Hash: {tx_hash}   区块高度: {block_number}')
+        tx_hash = send_check_in(address, private_key)
+        log.info(f'【{index}】签到交易Hash: {tx_hash}')
         time.sleep(3)
         result = check_in(session, tx_hash)
         log.info(f'【{index}】{result}')

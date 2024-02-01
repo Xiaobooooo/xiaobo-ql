@@ -1,6 +1,6 @@
 """
 cron: 0 0 1 1/1 *
-new Env('Qna3领取')
+new Env('Qna3_领取')
 """
 import time
 
@@ -12,7 +12,7 @@ from common.task import QLTask
 from common.util import log, get_chrome_session, get_error_msg
 from HW_Qna3CheckIn import login, contract_address
 
-TASK_NAME = 'Qna3领取'
+TASK_NAME = 'Qna3_领取'
 FILE_NAME = 'Qna3Wallet.txt'
 
 bsc = Web3(HTTPProvider("https://bsc-dataseed2.defibit.io"))
@@ -32,7 +32,7 @@ def claim_all(session: Session):
     return get_error_msg(name, res)
 
 
-def send_claim(address: ChecksumAddress, private_key: str, claim_amount, claim_nonce, claim_signature) -> (str, int):
+def send_claim(address: ChecksumAddress, private_key: str, claim_amount, claim_nonce, claim_signature) -> str:
     transaction_data = f'0x624f82f5{format(claim_amount, "0>64x")}{format(claim_nonce, "0>64x")}00000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000041{claim_signature[2:]}00000000000000000000000000000000000000000000000000000000000000'
     tx_to_estimate = {'from': address, 'to': contract_address, 'data': transaction_data}
     gas = bsc.eth.estimate_gas(tx_to_estimate)
@@ -40,8 +40,8 @@ def send_claim(address: ChecksumAddress, private_key: str, claim_amount, claim_n
     tx = {'to': contract_address, 'value': 0, 'data': transaction_data, 'gasPrice': bsc.eth.gas_price, 'gas': gas, 'nonce': nonce}
     signed_tx = bsc.eth.account.sign_transaction(tx, private_key)
     transaction = bsc.eth.send_raw_transaction(signed_tx.rawTransaction)
-    block_number = bsc.eth.wait_for_transaction_receipt(transaction).blockNumber
-    return transaction.hex(), block_number
+    bsc.eth.wait_for_transaction_receipt(transaction)
+    return transaction.hex()
 
 
 def claim(session: Session, history_id, tx_hash) -> str:
@@ -72,8 +72,8 @@ class Task(QLTask):
         if not amount:
             log.info(f'【{index}】领取: 暂无可领取积分')
             return False
-        tx_hash, block_number = send_claim(address, private_key, amount, nonce, signature)
-        log.info(f'【{index}】领取交易Hash: {tx_hash}   区块高度: {block_number}')
+        tx_hash = send_claim(address, private_key, amount, nonce, signature)
+        log.info(f'【{index}】领取交易Hash: {tx_hash}')
         time.sleep(3)
         result = claim(session, history_id, tx_hash)
         log.info(f'【{index}】{result}')

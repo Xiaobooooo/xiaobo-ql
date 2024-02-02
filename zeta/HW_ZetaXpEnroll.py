@@ -4,7 +4,7 @@ new Env('Zeta_XP注册')
 """
 import base64
 import time
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, unquote
 
 from eth_typing import ChecksumAddress
 from tls_client import Session
@@ -45,7 +45,7 @@ contract = zeta.eth.contract(address=contract_address, abi=abi)
 def send_enroll(address: ChecksumAddress, private_key: str) -> str:
     nonce = zeta.eth.get_transaction_count(address)
     if invite_code:
-        parsed_dict = parse_qs(base64.b64decode(invite_code).decode())
+        parsed_dict = parse_qs(base64.b64decode(unquote(invite_code)).decode())
         method = contract.functions.confirmAndAcceptInvitation(zeta.to_checksum_address(parsed_dict.get('address')[0]),
                                                                int(parsed_dict.get('expiration')[0]),
                                                                (int(parsed_dict.get('v')[0]), parsed_dict.get('r')[0],

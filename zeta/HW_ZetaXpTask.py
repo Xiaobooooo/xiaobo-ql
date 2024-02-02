@@ -6,12 +6,11 @@ import random
 import time
 
 from eth_typing import ChecksumAddress
-from tls_client import Session
 from web3 import Web3
 
 from common.task import QLTask
-from common.util import log, get_chrome_session, get_error_msg
-from HW_ZetaXpEnroll import zeta
+from common.util import log, get_chrome_session
+from HW_ZetaXpEnroll import zeta, claim_xp
 
 TASK_NAME = 'Zeta_交互'
 FILE_NAME = 'ZetaWallet.txt'
@@ -27,19 +26,6 @@ def send_zeta(address: ChecksumAddress, private_key: str) -> str:
     transaction = zeta.eth.send_raw_transaction(signed_tx.rawTransaction)
     zeta.eth.wait_for_transaction_receipt(transaction)
     return transaction.hex()
-
-
-def claim_xp(session: Session, task: str, address: ChecksumAddress, private_key: str) -> str:
-    name = f'领取XP-{task}'
-    signature = zeta.eth.account.sign_typed_data(private_key, {'name': "Hub/XP", 'version': "1", 'chainId': '7000'},
-                                                 {'Message': [{'name': "content", 'type': "string"}]}, {'content': "Claim XP"})
-    payload = {"address": address, "task": task, "signedMessage": signature.signature.hex()}
-    res = session.post('https://xp.cl04.zetachain.com/v1/xp/claim-task', json=payload)
-    if res.text.count('totalXp'):
-        return f'{name}: 成功'
-    if res.text.count('Task already claimed'):
-        return f'{name}: Task already claimed'
-    return get_error_msg(name, res)
 
 
 class Task(QLTask):

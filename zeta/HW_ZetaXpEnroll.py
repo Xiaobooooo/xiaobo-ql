@@ -68,19 +68,24 @@ def send_enroll(address: ChecksumAddress, private_key: str) -> str:
     return transaction.hex()
 
 
-def claim_xp(session: Session, address: ChecksumAddress, private_key: str) -> str:
+def enroll(session: Session, address: ChecksumAddress) -> bool:
     name = '注册验证'
     res = session.post('https://xp.cl04.zetachain.com/v1/enroll-in-zeta-xp', json={"address": address})
-    if res.text.count('isUserVerified') and res.json().get('isUserVerified'):
-        name = '领取注册XP'
-        signature = zeta.eth.account.sign_typed_data(private_key, {'name': "Hub/XP", 'version': "1", 'chainId': '7000'},
-                                                     {'Message': [{'name': "content", 'type': "string"}]}, {'content': "Claim XP"})
-        payload = {"address": address, "task": "WALLET_VERIFY", "signedMessage": signature.signature.hex()}
-        res = session.post('https://xp.cl04.zetachain.com/v1/xp/claim-task', json=payload)
-        if res.text.count('totalXp'):
-            return f'{name}: 成功'
-        if res.text.count('Task already claimed'):
-            return f'{name}: Task already claimed'
+    if res.text.count('isUserVerified'):
+        return res.json().get('isUserVerified')
+    get_error_msg(name, res)
+
+
+def claim_xp(session: Session, task: str, address: ChecksumAddress, private_key: str) -> str:
+    name = f'领取XP-{task}'
+    signature = zeta.eth.account.sign_typed_data(private_key, {'name': "Hub/XP", 'version': "1", 'chainId': '7000'},
+                                                 {'Message': [{'name': "content", 'type': "string"}]}, {'content': "Claim XP"})
+    payload = {"address": address, "task": task, "signedMessage": signature.signature.hex()}
+    res = session.post('https://xp.cl04.zetachain.com/v1/xp/claim-task', json=payload)
+    if res.text.count('totalXp'):
+        return f'{name}: 成功'
+    if res.text.count('Task already claimed'):
+        return f'{name}: Task already claimed'
     return get_error_msg(name, res)
 
 
@@ -105,8 +110,15 @@ class Task(QLTask):
             time.sleep(10)
         else:
             log.info(f'【{index}】注册交易失败: {result}')
-        result = claim_xp(session, address, private_key)
-        log.info(f'【{index}】{result}')
+
+        result = enroll(session, address)
+        if result:
+            result = claim_xp(session, "WALLET_VERIFY", address, private_key)
+            log.info(f'【{index}】{result}')
+            result = claim_xp(session, "WALLET_VERIFY_BY_INVITE", address, private_key)
+            log.info(f'【{index}】{result}')
+        else:
+            log.info(f'【{index}】注册认证失败')
 
 
 if __name__ == '__main__':

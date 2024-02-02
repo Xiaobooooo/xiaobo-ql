@@ -2,6 +2,7 @@
 cron: 0 10 * * *
 new Env('Zeta_交互')
 """
+import random
 import time
 
 from eth_typing import ChecksumAddress
@@ -57,8 +58,9 @@ class Task(QLTask):
         session.proxies = proxy
 
         result = send_zeta(address, private_key)
-        log.info(f'【{index}】交易Hash: {result}   10S后领取XP')
-        time.sleep(10)
+        delay = random.randint(10, 15)
+        log.info(f'【{index}】交易Hash: {result}   {delay}S后领取XP')
+        time.sleep(delay)
         result = claim_xp(session, 'SEND_ZETA', address, private_key)
         log.info(f'【{index}】{result}')
         result = claim_xp(session, 'RECEIVE_ZETA', address, private_key)

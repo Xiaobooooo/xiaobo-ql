@@ -20,7 +20,7 @@ INVITE_CODE_NAME = 'QNA3_INVITE_CODE'
 invite_code = get_env(INVITE_CODE_NAME)
 if invite_code is None or invite_code == '':
     log.info("暂未设置邀请码INVITE_CODE")
-invite_code = 'fCGDWYRu'
+
 RPC_NAME = 'QNA3_RPC'
 rpc = get_env(RPC_NAME)
 if rpc is None or rpc == '':

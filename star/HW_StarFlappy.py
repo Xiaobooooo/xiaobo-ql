@@ -42,19 +42,13 @@ class Task(QLTask):
 
         second = float(datetime.datetime.now().strftime('%S.%f'))
         success = 0
-        if second >= 55 or second <= 10 or success < 1:
+        run = 0
+        while success < 3 and run < 15:
+            run += 1
             result = game_record(session, game, 200)
             log.info(f'【{index}】{result}')
             if result == '完成游戏成功':
                 success += 1
-        else:
-            run = 0
-            while success < 1 and run < 20:
-                run += 1
-                result = game_record(session, game, 200)
-                log.info(f'【{index}】{result}')
-                if result == '完成游戏成功':
-                    success += 1
 
 
 if __name__ == '__main__':

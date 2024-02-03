@@ -41,18 +41,20 @@ class Task(QLTask):
         session.proxies = {'https': proxy}
 
         second = float(datetime.datetime.now().strftime('%S.%f'))
-        if second >= 55 or second <= 10:
+        success = 0
+        if second >= 55 or second <= 10 or success < 1:
             result = game_record(session, game, 200)
             log.info(f'【{index}】{result}')
+            if result == '完成游戏成功':
+                success += 1
         else:
-            success = 0
             run = 0
             while success < 1 and run < 20:
                 run += 1
                 result = game_record(session, game, 200)
+                log.info(f'【{index}】{result}')
                 if result == '完成游戏成功':
                     success += 1
-                log.info(f'【{index}】{result}')
 
 
 if __name__ == '__main__':

@@ -11,7 +11,7 @@ from tls_client import Session
 from web3 import Web3
 
 from common.task import QLTask
-from common.util import log, get_error_msg
+from common.util import log, get_error_msg, get_chrome_session
 from HW_Web3GoCheckIn import login
 
 TASK_NAME = 'Web3Go_任务'
@@ -84,12 +84,10 @@ class Task(QLTask):
         # session = get_chrome_session()
         session = requests.Session()
         session.headers.update(headers)
-        session.proxies = proxy
+        session.proxies = {'https': proxy}
         token = login(session, address, private_key)
         log.info(f'【{index}】登录成功')
         session.headers.update({'Authorization': 'Bearer ' + token})
-
-        'https://reiki.web3go.xyz/api/profile'
 
         gifts = get_gift(session)
         for gift in gifts:

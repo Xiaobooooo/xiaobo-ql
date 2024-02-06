@@ -11,7 +11,7 @@ from eth_typing import ChecksumAddress
 from tls_client import Session
 
 from common.task import QLTask
-from common.util import log, get_error_msg
+from common.util import log, get_error_msg, get_chrome_session
 from HW_Web3GoMint import bsc
 
 TASK_NAME = 'Web3Go_签到'
@@ -52,8 +52,8 @@ class Task(QLTask):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36'
         }
-        # session = get_chrome_session()
-        session = requests.Session()
+        session = get_chrome_session()
+        # session = requests.Session()
         session.headers.update(headers)
         session.proxies = proxy
         token = login(session, address, private_key)

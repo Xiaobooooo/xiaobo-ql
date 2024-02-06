@@ -6,11 +6,13 @@ import json
 import random
 import string
 
+import requests
 from tls_client import Session
 from web3 import Web3
 
 from common.task import QLTask
-from common.util import log, get_error_msg, get_chrome_session
+from common.util import log, get_error_msg
+from HW_Web3GoCheckIn import login
 
 TASK_NAME = 'Web3Go_任务'
 FILE_NAME = 'Web3GoWallet.txt'
@@ -79,13 +81,12 @@ class Task(QLTask):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36'
         }
-        session = get_chrome_session()
-        # session = requests.Session()
+        # session = get_chrome_session()
+        session = requests.Session()
         session.headers.update(headers)
         session.proxies = proxy
-        # token = login(session, address, private_key)
-        # log.info(f'【{index}】登录成功')
-        token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50IjoiMHhkMmJiMWYyMGU0QzU0MkQ3OTM1OTAwMjNlMzY2OWNGNzMyMjMzMzMzIiwiYXV0aEZyb20iOiJ3ZWIzIiwiZW1haWwiOiIweGQyYmIxZjIwZTRDNTQyRDc5MzU5MDAyM2UzNjY5Y0Y3MzIyMzMzMzNAcmVpa2kuYWkiLCJuYW1lIjoicmVpa2ktdXNlciIsIndhbGxldF9hZGRyZXNzIjoiMHhkMmJiMWYyMGU0QzU0MkQ3OTM1OTAwMjNlMzY2OWNGNzMyMjMzMzMzIiwiaWF0IjoxNzA3MjQzNjE2LCJleHAiOjE3MDczMzAwMTZ9.6VFSlxDticy9UuiYikGe-psirgmp5gm6zH-fTjPTkwQ'
+        token = login(session, address, private_key)
+        log.info(f'【{index}】登录成功')
         session.headers.update({'Authorization': 'Bearer ' + token})
 
         'https://reiki.web3go.xyz/api/profile'

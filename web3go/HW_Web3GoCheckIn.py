@@ -54,8 +54,10 @@ class Task(QLTask):
         }
         # session = get_chrome_session()
         session = requests.Session()
+        session.verify = False
         session.headers.update(headers)
         session.proxies = {'https': proxy}
+
         token = login(session, address, private_key)
         log.info(f'【{index}】登录成功')
         session.headers.update({'Authorization': 'Bearer ' + token})

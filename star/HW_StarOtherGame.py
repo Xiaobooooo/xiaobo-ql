@@ -9,7 +9,6 @@ from requests import Session
 
 from common.task import QLTask
 from common.util import log
-from HW_StarFlappy import game_record
 from HW_StarFlappy import FILE_NAME
 from HW_StarLogin import get_headers, encrypt, get_error
 
@@ -19,7 +18,7 @@ TASK_NAME = 'Star_其他游戏'
 def game_record(session: Session, game: str, score: int) -> str:
     name = '完成游戏'
     payload = encrypt({"game": game, "mode": "tournament", "score": score, "extra": False}, True)
-    res = session.post('https://api.starnetwork.io/v3/game/record', json=payload, timeout=300)
+    res = session.post('https://api.starnetwork.io/v2/game/record', json=payload, timeout=300)
     if res.text.count('id') and res.text.count('SAVED'):
         return f'{name}: 成功'
     if res.text.count('Service Unavailable'):

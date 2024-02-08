@@ -52,11 +52,11 @@ class Task(QLTask):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36'
         }
-        # session = get_chrome_session()
-        session = requests.Session()
-        session.verify = False
+        session = get_chrome_session()
+        # session = requests.Session()
         session.headers.update(headers)
-        session.proxies = {'https': proxy}
+        # session.proxies = {'https': proxy}
+        session.proxies = proxy
 
         token = login(session, address, private_key)
         log.info(f'【{index}】登录成功')

@@ -5,6 +5,7 @@ new Env('Web3Go_任务')
 import json
 import random
 import string
+import time
 
 import requests
 from tls_client import Session
@@ -21,9 +22,9 @@ FILE_NAME = 'Web3GoWallet.txt'
 def set_email(session: Session) -> json:
     name = '设置邮箱'
     username = ''.join(random.sample(string.ascii_lowercase, random.randint(6, 10)))
-    res = session.post('https://reiki.web3go.xyz/api/profile', json={"email": f"{username}@rambler.cc", "name": username})
-    if res.text == '[]' or res.text.count('openedAt'):
-        return res.json()
+    res = session.patch('https://reiki.web3go.xyz/api/profile', json={"email": f"{username}@rambler.cc", "name": username})
+    if res.text == 'true':
+        return f'{name}: 成功'
     return get_error_msg(name, res)
 
 
@@ -81,15 +82,18 @@ class Task(QLTask):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36'
         }
-        # session = get_chrome_session()
-        session = requests.Session()
+        session = get_chrome_session()
+        # session = requests.Session()
         session.headers.update(headers)
-        session.verify = False
-        session.proxies = {'https': proxy}
+        # session.proxies = {'https': proxy}
+        session.proxies = proxy
 
         token = login(session, address, private_key)
         log.info(f'【{index}】登录成功')
         session.headers.update({'Authorization': 'Bearer ' + token})
+
+        result = set_email(session)
+        log.info(f'【{index}】{result}')
 
         gifts = get_gift(session)
         for gift in gifts:
@@ -112,7 +116,9 @@ class Task(QLTask):
                             result = answer(session, items_id, k)
                             if result:
                                 break
+                    time.sleep(3.33)
                 log.info(f'【{index}】答题[{question_id}]: 成功')
+                time.sleep(15)
 
 
 if __name__ == '__main__':

@@ -8,7 +8,8 @@ import requests
 
 from common.task import QLTask
 from common.util import log, get_env
-from HW_StarFlappy import FILE_NAME, game_record
+from HW_StarFlappy import FILE_NAME
+from HW_StarBallz import game_record
 from HW_StarLogin import get_headers
 
 TASK_NAME = 'Star_BlockPuzzle'

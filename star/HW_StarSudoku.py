@@ -1,5 +1,5 @@
 """
-cron: 45 59 1 * *
+cron: 45 59 1 * * *
 new Env('Star_Sudoku')
 """
 import random

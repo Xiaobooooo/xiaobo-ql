@@ -1,5 +1,5 @@
 """
-cron: 45 59 13 * *
+cron: 45 59 13 * * *
 new Env('Star_BrainWorkout')
 """
 import random

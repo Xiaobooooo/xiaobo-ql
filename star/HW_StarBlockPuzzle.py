@@ -1,5 +1,5 @@
 """
-cron: 45 59 19 * *
+cron: 45 59 19 * * *
 new Env('Star_BlockPuzzle')
 """
 import random

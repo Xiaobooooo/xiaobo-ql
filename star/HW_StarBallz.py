@@ -1,5 +1,5 @@
 """
-cron: 45 59 21 * *
+cron: 45 59 21 * * *
 new Env('Star_Ballz')
 """
 import random

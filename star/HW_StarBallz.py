@@ -1,6 +1,6 @@
 """
-cron: 0 0 * * *
-new Env('Star_其他游戏')
+cron: 45 59 21 * *
+new Env('Star_Ballz')
 """
 import random
 
@@ -8,11 +8,11 @@ import requests
 from requests import Session
 
 from common.task import QLTask
-from common.util import log
+from common.util import log, get_env
 from HW_StarFlappy import FILE_NAME
 from HW_StarLogin import get_headers, encrypt, get_error
 
-TASK_NAME = 'Star_其他游戏'
+TASK_NAME = 'Star_Ballz'
 
 
 def game_record(session: Session, game: str, score: int) -> str:
@@ -32,17 +32,27 @@ class Task(QLTask):
         game = split[-2]
         token = split[-1]
 
-        games = ['ballz', 'block_puzzle', 'brain_workout', 'puzzle_2048', 'sudoku']
-
-        if not games.count(game):
+        if 'ballz' != game:
             log.info(f'【{index}】不完成此任务')
             return
+
+        sc = get_env(game)
+        if not sc:
+            score = random.randint(66666, 99999)
+            log.info(f'【{index}】默认随机分数: {score}')
+        else:
+            if sc.count('-'):
+                temps = sc.split('-')
+                score = random.randint(int(temps[0]), int(temps[1]))
+                log.info(f'【{index}】指定随机分数: {score}')
+            else:
+                score = int(sc)
+                log.info(f'【{index}】指定分数: {score}')
 
         session = requests.Session()
         session.headers.update(get_headers(token))
         session.proxies = {'https': proxy}
 
-        score = random.randint(66666, 99999)
         result = game_record(session, game, score)
         log.info(f'【{index}】{result}')
 

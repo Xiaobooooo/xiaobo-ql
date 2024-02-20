@@ -117,7 +117,7 @@ def get_error_msg(name: str, response: Response, completed_or_waits: list = None
     :param completed_or_waits: 已完成或时间未到标识
     :param un_auths: 未登录标识
     :param msg_key: 消息key
-    :param is_raise: 是否抛出防火墙拦截
+    :param is_raise: 是否抛出错误信息
     :return: 错误信息
     """
     msg = None

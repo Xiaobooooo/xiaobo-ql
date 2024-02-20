@@ -1,3 +1,4 @@
+import random
 import re
 import time
 from abc import ABCMeta, abstractmethod
@@ -110,7 +111,7 @@ def get_proxy(api_url: str, index: int = None) -> str:
 
 
 class QLTask(metaclass=ABCMeta):
-    def __init__(self, task_name: str, file_name: str, load_notice: bool = False):
+    def __init__(self, task_name: str, file_name: str, is_delay: bool = False):
         self.wait = 0
         self.success = 0
         self.task_name = task_name
@@ -118,14 +119,10 @@ class QLTask(metaclass=ABCMeta):
         self.un_auth = []
         self.fail_data = []
         self.notice = ''
-        if load_notice:
-            log.info('==========公告==========')
-            try:
-                self.notice = get_random_session().get('https://static.xiaobooooo.com/text/notice').text
-                log.info(f'\n{self.notice}')
-            except Exception as e:
-                log.error(f'公告加载失败: {repr(e)}')
-            log.info('==========公告==========\n')
+        if is_delay:
+            delay = random.randint(233, 3600)
+            log.info(f'随机延迟{delay}秒后开始运行')
+            time.sleep(delay)
         log.info('=====开始加载配置=====')
         self.lines = load_txt(self.file_name)
         self.total = len(self.lines)

@@ -44,6 +44,7 @@ def check_in(session: Session) -> str:
 
 
 class Task(QLTask):
+
     def task(self, index: int, text: str, proxy: str):
         split = text.split('----')
         address = bsc.to_checksum_address(split[0])
@@ -66,4 +67,4 @@ class Task(QLTask):
 
 
 if __name__ == '__main__':
-    Task(TASK_NAME, FILE_NAME).run()
+    Task(TASK_NAME, FILE_NAME, True).run()

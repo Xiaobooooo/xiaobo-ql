@@ -7,24 +7,44 @@ import random
 import string
 import time
 
-import requests
 from tls_client import Session
 from web3 import Web3
 
 from common.task import QLTask
-from common.util import log, get_error_msg, get_chrome_session
+from common.util import log, get_error_msg, get_chrome_session, load_txt, write_txt, lock
 from HW_Web3GoCheckIn import login
 
 TASK_NAME = 'Web3Go_任务'
 FILE_NAME = 'Web3GoWallet.txt'
 
 
+def bind_code(session: Session, code: str) -> json:
+    name = '绑定邀请码'
+    res = session.get('https://reiki.web3go.xyz/api/profile')
+    print(res.json().get('walletAddress') + ': ' + res.json().get('referralCode'))
+    res = session.get('https://reiki.web3go.xyz/api/nft/sync', headers={'x-referral-code': code})
+    if res.text.count('success'):
+        return f'{name}: 成功'
+    return get_error_msg(name, res)
+
+
 def set_email(session: Session) -> json:
     name = '设置邮箱'
     username = ''.join(random.sample(string.ascii_lowercase, random.randint(6, 10)))
-    res = session.patch('https://reiki.web3go.xyz/api/profile', json={"email": f"{username}@rambler.cc", "name": username})
+    res = session.patch('https://reiki.web3go.xyz/api/profile', json={"email": f"{username}@ramlder.site", "name": username})
     if res.text == 'true':
         return f'{name}: 成功'
+    return get_error_msg(name, res)
+
+
+def auth_dc(session: Session, callback_url: str) -> json:
+    name = '绑定DC'
+    res = session.get(callback_url)
+    if res.text.count('success=true'):
+        return f'{name}: 成功'
+    if res.text.count('error='):
+        error = res.text.split('error=')[1].split('"')[0]
+        return f"{name}: {error}"
     return get_error_msg(name, res)
 
 
@@ -39,6 +59,7 @@ def get_gift(session: Session) -> json:
 def open_gift(session: Session, gift_id: str):
     name = '打开礼物'
     res = session.post(f'https://reiki.web3go.xyz/api/gift/open/{gift_id}')
+    print(res.text)
     if res.text == 'true':
         return f'{name}: 成功'
     return get_error_msg(name, res)
@@ -74,6 +95,13 @@ def answer(session: Session, quiz_id: str, _answer: str) -> bool:
 
 
 class Task(QLTask):
+    def __init__(self, task_name: str, file_name: str):
+        super().__init__(task_name, file_name)
+        self.dcs = load_txt('Web3GoDiscord.txt')
+        self.callback_urls = []
+        for i in range(len(self.dcs)):
+            self.callback_urls.append(self.dcs[i].split('----')[4])
+
     def task(self, index: int, text: str, proxy: str):
         split = text.split('----')
         address = Web3.to_checksum_address(split[0])
@@ -88,9 +116,22 @@ class Task(QLTask):
         # session.proxies = {'https': proxy}
         session.proxies = proxy
 
+        # session.get('https://reiki.web3go.xyz?ref=78380b05e33e783d')
+        # session.get('https://reiki.web3go.xyz/aiweb/home', headers={'Referer': 'https://reiki.web3go.xyz/?ref=78380b05e33e783d'})
+
         token = login(session, address, private_key)
         log.info(f'【{index}】登录成功')
         session.headers.update({'Authorization': 'Bearer ' + token})
+
+
+        # result = bind_code(session, '2521ad7d942e22ee')
+        # log.info(f'【{index}】{result}')
+        # result = auth_dc(session, self.callback_urls[index - 1])
+        # log.info(f'【{index}】{result}')
+        # if not result.count('成功'):
+        #     with lock:
+        #         write_txt('Web3Go绑定DC失败', f'{text}----{result}', True)
+        #         write_txt('Web3Go绑定DC失败DC', self.dcs[index - 1], True)
 
         result = set_email(session)
         log.info(f'【{index}】{result}')

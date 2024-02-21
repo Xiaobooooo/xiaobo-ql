@@ -20,13 +20,11 @@ class Task(QLTask):
         split = text.split('----')
         token = split[-1]
 
-        score = random.randint(123, 188)
-
         session = requests.Session()
         session.headers.update(get_headers(token))
         session.proxies = {'https': proxy}
 
-        result = game_record(session, 'flappy', score)
+        result = game_record(session, 'flappy', 0)
         log.info(f'【{index}】{result}')
 
 

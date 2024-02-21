@@ -1,5 +1,5 @@
 """
-cron: 0 1-23/3 * * *
+cron: 30 0 1-23/8 * * *
 new Env('Star_加速抽奖_小号')
 """
 from HW_StarDrawSpeed import Task

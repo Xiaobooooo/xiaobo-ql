@@ -2,8 +2,6 @@
 cron: 15 21 * * *
 new Env('Star_Ballz_小号')
 """
-import random
-
 import requests
 
 from common.task import QLTask

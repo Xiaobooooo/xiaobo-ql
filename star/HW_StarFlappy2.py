@@ -2,8 +2,6 @@
 cron: 45 7 * * *
 new Env('Star_Flappy_小号')
 """
-import random
-
 import requests
 
 from common.task import QLTask

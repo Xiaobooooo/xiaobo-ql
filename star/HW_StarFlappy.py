@@ -1,17 +1,15 @@
 """
 cron: 59 7 * * *
-new Env('Star_Flappy游戏')
+new Env('Star_Flappy')
 """
-import datetime
-
 import requests
 from tls_client import Session
 
 from common.task import QLTask
-from common.util import log, get_android_session
+from common.util import log
 from HW_StarLogin import get_error, encrypt, get_headers
 
-TASK_NAME = 'Star_Flappy游戏'
+TASK_NAME = 'Star_Flappy'
 FILE_NAME = 'StarNetworkGameToken.txt'
 
 
@@ -36,11 +34,9 @@ class Task(QLTask):
             return
 
         session = requests.Session()
-        # session = get_android_session()
         session.headers.update(get_headers(token))
         session.proxies = {'https': proxy}
 
-        second = float(datetime.datetime.now().strftime('%S.%f'))
         success = 0
         run = 0
         while success < 3 and run < 15:

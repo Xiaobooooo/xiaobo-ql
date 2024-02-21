@@ -14,6 +14,11 @@ FILE_NAME = 'StarNetworkFlappyToken.txt'
 
 
 class Task(QLTask):
+
+    def __init__(self, task_name: str, file_name: str):
+        super().__init__(task_name, file_name)
+        self.thread_num = 15
+
     def task(self, index: int, text: str, proxy: str):
         split = text.split('----')
         token = split[-1]

@@ -1,5 +1,5 @@
 """
-cron: 0 0 1 1/1 *
+cron: 0 0 1,15 1/1 *
 new Env('Qna3_领取')
 """
 import time

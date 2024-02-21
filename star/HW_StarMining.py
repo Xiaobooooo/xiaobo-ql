@@ -6,7 +6,7 @@ import requests
 from tls_client import Session
 
 from common.task import QLTask
-from common.util import log, get_android_session
+from common.util import log
 from HW_StarLogin import get_error, get_headers
 
 TASK_NAME = 'Star_挖矿'
@@ -27,7 +27,6 @@ class Task(QLTask):
         token = split[-1]
 
         session = requests.Session()
-        # session = get_android_session()
         session.headers.update(get_headers(token))
         session.proxies = {'https': proxy}
 

@@ -1,6 +1,6 @@
 """
 cron: 45 7 * * *
-new Env('Star_Flappy小号')
+new Env('Star_Flappy_小号')
 """
 import random
 
@@ -11,14 +11,13 @@ from common.util import log
 from HW_StarLogin import get_headers
 from HW_StarFlappy import game_record
 
-TASK_NAME = 'Star_Flappy小号'
+TASK_NAME = 'Star_Flappy_小号'
 FILE_NAME = 'StarNetworkFlappyToken.txt'
 
 
 class Task(QLTask):
     def task(self, index: int, text: str, proxy: str):
         split = text.split('----')
-        game = split[-2]
         token = split[-1]
 
         score = random.randint(123, 188)
@@ -27,7 +26,7 @@ class Task(QLTask):
         session.headers.update(get_headers(token))
         session.proxies = {'https': proxy}
 
-        result = game_record(session, game, score)
+        result = game_record(session, 'flappy', score)
         log.info(f'【{index}】{result}')
 
 

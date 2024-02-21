@@ -6,14 +6,14 @@ import requests
 from tls_client import Session
 
 from common.task import QLTask
-from common.util import log, get_android_session
-from HW_StarLogin import get_error, encrypt, get_headers
+from common.util import log
+from HW_StarLogin import get_error, get_headers
 from HW_StarMining import FILE_NAME
 
 TASK_NAME = 'Star_签到'
 
 
-def draw(session: Session) -> str:
+def check_in(session: Session) -> str:
     name = '签到'
     res = session.post('https://api.starnetwork.io/v3/user/checkin')
     if res.text.count('CLAIMED'):
@@ -24,15 +24,13 @@ def draw(session: Session) -> str:
 class Task(QLTask):
     def task(self, index: int, text: str, proxy: str):
         split = text.split('----')
-        uid = split[-2]
         token = split[-1]
 
         session = requests.Session()
-        # session = get_android_session()
         session.headers.update(get_headers(token))
         session.proxies = {'https': proxy}
 
-        result = draw(session)
+        result = check_in(session)
         log.info(f'【{index}】{result}')
 
 

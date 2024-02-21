@@ -11,7 +11,7 @@ from tls_client import Session
 from tls_client.response import Response
 
 from common.task import QLTask
-from common.util import log, write_txt, get_error_msg, get_android_session, UnAuthException
+from common.util import log, write_txt, get_error_msg, UnAuthException
 
 TASK_NAME = 'Star_登录'
 FILE_NAME = 'StarNetwork.txt'
@@ -71,7 +71,6 @@ class Task(QLTask):
             self.fail_email.append(text)
 
         session = requests.Session()
-        # session = get_android_session()
         session.headers.update(get_headers())
         session.proxies = {'https': proxy}
 

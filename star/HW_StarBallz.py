@@ -21,6 +21,8 @@ def game_record(session: Session, game: str, score: int) -> str:
     res = session.post('https://api.starnetwork.io/v2/game/record', json=payload, timeout=300)
     if res.text.count('id') and res.text.count('SAVED'):
         return f'{name}[{game}]: 成功'
+    if res.text.count('SAVED') or res.text.count('FAILED'):
+        return f'{name}[{game}]: 失败'
     if res.text.count('Service Unavailable'):
         return res.text
     return get_error(name, res)

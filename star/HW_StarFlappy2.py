@@ -27,8 +27,11 @@ class Task(QLTask):
         session.headers.update(get_headers(token))
         session.proxies = {'https': proxy}
 
-        result = game_record(session, 'flappy', 0)
-        log.info(f'【{index}】{result}')
+        while True:
+            result = game_record(session, 'flappy', 0)
+            log.info(f'【{index}】{result}')
+            if result.count('失败'):
+                break
 
 
 if __name__ == '__main__':

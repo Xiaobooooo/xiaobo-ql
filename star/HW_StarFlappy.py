@@ -18,7 +18,7 @@ def game_record(session: Session, game: str, score: int) -> str:
     payload = encrypt({"game": game, "mode": "tournament", "score": str(score), "extra": False}, True)
     res = session.post('https://api.starnetwork.io/v3/game/record', json=payload, timeout=300)
     if res.text.count('id') and res.text.count('SAVED'):
-        return f'{name}: 成功'
+        return f'{name}[{game}]: 成功'
     if res.text.count('Service Unavailable'):
         return res.text
     return get_error(name, res)
@@ -43,7 +43,7 @@ class Task(QLTask):
             run += 1
             result = game_record(session, game, 200)
             log.info(f'【{index}】{result}')
-            if result == '完成游戏成功':
+            if result.count('成功'):
                 success += 1
 
 

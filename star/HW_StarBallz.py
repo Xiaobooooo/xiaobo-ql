@@ -20,7 +20,7 @@ def game_record(session: Session, game: str, score: int) -> str:
     payload = encrypt({"game": game, "mode": "tournament", "score": score, "extra": False}, True)
     res = session.post('https://api.starnetwork.io/v2/game/record', json=payload, timeout=300)
     if res.text.count('id') and res.text.count('SAVED'):
-        return f'{name}: 成功'
+        return f'{name}[{game}]: 成功'
     if res.text.count('Service Unavailable'):
         return res.text
     return get_error(name, res)

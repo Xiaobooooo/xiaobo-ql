@@ -8,11 +8,34 @@ import requests
 from requests import Session
 
 from common.task import QLTask
-from common.util import log, get_env
+from common.util import log
 from HW_StarFlappy import FILE_NAME
 from HW_StarLogin import get_headers, encrypt, get_error
 
 TASK_NAME = 'Star_Ballz'
+
+
+def query_score(session: Session, game: str) -> int:
+    name = '查询分数'
+    res = session.get(f'https://api.starnetwork.io/v3/game/{game}', timeout=300)
+    if res.text.count('tournament'):
+        tournament_id = ''
+        ids = res.json()['tournament']['_id']['id']['data']
+        for data in ids:
+            val = str(hex(data)[2:])
+            if len(val) == 1:
+                val = '0' + str(hex(data)[2:])
+            tournament_id = tournament_id + val
+        res = session.get(f'https://api.starnetwork.io/v3/game/leaderboard/{tournament_id}', timeout=300)
+        if res.text.count('top'):
+            tops = res.json().get('data').get('top')
+            for top in tops:
+                score_str = top.get('score')
+                try:
+                    return int(score_str)
+                except:
+                    continue
+    return get_error(name, res)
 
 
 def game_record(session: Session, game: str, score: int) -> str:
@@ -29,27 +52,25 @@ def game_record(session: Session, game: str, score: int) -> str:
 
 
 class Task(QLTask):
+    def __init__(self, task_name: str, file_name: str, game: str):
+        super().__init__(task_name, file_name)
+        self.game = game
+        session = requests.Session()
+        session.headers.update(get_headers())
+        self.score = query_score(session, self.game)
+        log.info(f'[{self.game}]当前第一名分数: {self.score}')
+
     def task(self, index: int, text: str, proxy: str):
         split = text.split('----')
         game = split[-2]
         token = split[-1]
 
-        if 'ballz' != game:
+        if self.game != game:
             log.info(f'【{index}】不完成此任务')
             return
 
-        sc = get_env(game)
-        if not sc:
-            score = random.randint(66666, 99999)
-            log.info(f'【{index}】默认随机分数: {score}')
-        else:
-            if sc.count('-'):
-                temps = sc.split('-')
-                score = random.randint(int(temps[0]), int(temps[1]))
-                log.info(f'【{index}】指定随机分数: {score}')
-            else:
-                score = int(sc)
-                log.info(f'【{index}】指定分数: {score}')
+        score = self.score + random.randint(23333, 66666)
+        log.info(f'【{index}】随机分数: {score}')
 
         session = requests.Session()
         session.headers.update(get_headers(token))
@@ -60,4 +81,4 @@ class Task(QLTask):
 
 
 if __name__ == '__main__':
-    Task(TASK_NAME, FILE_NAME).run()
+    Task(TASK_NAME, FILE_NAME, 'ballz').run()

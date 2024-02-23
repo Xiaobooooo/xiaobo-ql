@@ -1,6 +1,6 @@
 """
-cron: 15 21 * * *
-new Env('Star_Ballz_小号')
+cron: 15 1 * * *
+new Env('Star_Puzzle2048_小号')
 """
 import requests
 
@@ -8,9 +8,9 @@ from common.task import QLTask
 from common.util import log
 from HW_StarLogin import get_headers
 from HW_StarFlappy import game_record
+from HW_StarBallz2 import FILE_NAME
 
-TASK_NAME = 'Star_Ballz_小号'
-FILE_NAME = 'StarNetworkGameToken2.txt'
+TASK_NAME = 'Star_Puzzle2048_小号'
 
 
 class Task(QLTask):
@@ -23,7 +23,7 @@ class Task(QLTask):
         session.proxies = {'https': proxy}
 
         for i in range(30):
-            result = game_record(session, 'ballz', 0)
+            result = game_record(session, 'puzzle_2048', 0)
             log.info(f'【{index}】{result}')
             if result.count('失败'):
                 break

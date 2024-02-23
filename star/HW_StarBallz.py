@@ -7,7 +7,7 @@ import random
 import requests
 from requests import Session
 
-from common.task import QLTask
+from common.task import QLTask, get_proxy
 from common.util import log
 from HW_StarFlappy import FILE_NAME
 from HW_StarLogin import get_headers, encrypt, get_error
@@ -55,8 +55,12 @@ class Task(QLTask):
     def __init__(self, task_name: str, file_name: str, game: str):
         super().__init__(task_name, file_name)
         self.game = game
+        proxy = get_proxy(self.api_url)
+
         session = requests.Session()
         session.headers.update(get_headers())
+        session.proxies = {'https': proxy}
+
         self.score = query_score(session, self.game)
         log.info(f'[{self.game}]当前第一名分数: {self.score}')
 

@@ -7,8 +7,8 @@ import random
 import requests
 from requests import Session
 
-from common.task import QLTask, get_proxy
-from common.util import log
+from common.task import QLTask
+from common.util import log, lock
 from HW_StarFlappy import FILE_NAME
 from HW_StarLogin import get_headers, encrypt, get_error
 
@@ -55,14 +55,7 @@ class Task(QLTask):
     def __init__(self, task_name: str, file_name: str, game: str):
         super().__init__(task_name, file_name)
         self.game = game
-        proxy = get_proxy(self.api_url)
-
-        session = requests.Session()
-        session.headers.update(get_headers())
-        session.proxies = {'https': proxy}
-
-        self.score = query_score(session, self.game)
-        log.info(f'[{self.game}]当前第一名分数: {self.score}')
+        self.score = None
 
     def task(self, index: int, text: str, proxy: str):
         split = text.split('----')
@@ -73,12 +66,17 @@ class Task(QLTask):
             log.info(f'【{index}】不完成此任务')
             return
 
-        score = self.score + random.randint(23333, 66666)
-        log.info(f'【{index}】随机分数: {score}')
-
         session = requests.Session()
         session.headers.update(get_headers(token))
         session.proxies = {'https': proxy}
+
+        with lock:
+            if not self.score:
+                self.score = query_score(session, self.game)
+                log.info(f'[{self.game}]当前第一名分数: {self.score}')
+
+        score = self.score + random.randint(23333, 66666)
+        log.info(f'【{index}】随机分数: {score}')
 
         result = game_record(session, game, score)
         log.info(f'【{index}】{result}')

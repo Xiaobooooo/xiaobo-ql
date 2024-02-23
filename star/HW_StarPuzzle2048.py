@@ -1,5 +1,5 @@
 """
-cron: 45 59 1 * * *
+cron: 30 59 1 * * *
 new Env('Star_Puzzle2048')
 """
 from HW_StarBallz import Task

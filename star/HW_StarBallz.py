@@ -1,5 +1,5 @@
 """
-cron: 45 59 21 * * *
+cron: 30 59 21 * * *
 new Env('Star_Ballz')
 """
 import random
@@ -35,6 +35,7 @@ def query_score(session: Session, game: str) -> int:
                     return int(score_str)
                 except:
                     continue
+            return 50000
     return get_error(name, res)
 
 
@@ -78,7 +79,7 @@ class Task(QLTask):
         score = self.score + random.randint(23333, 66666)
         log.info(f'【{index}】随机分数: {score}')
 
-        result = game_record(session, game, score)
+        result = game_record(session, self.game, score)
         log.info(f'【{index}】{result}')
 
 

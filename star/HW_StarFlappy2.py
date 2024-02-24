@@ -8,9 +8,9 @@ from common.task import QLTask
 from common.util import log
 from HW_StarLogin import get_headers
 from HW_StarFlappy import game_record
+from HW_StarBallz2 import FILE_NAME
 
 TASK_NAME = 'Star_Flappy_小号'
-FILE_NAME = 'StarNetworkFlappyToken.txt'
 
 
 class Task(QLTask):

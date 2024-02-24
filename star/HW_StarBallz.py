@@ -19,6 +19,8 @@ def query_score(session: Session, game: str) -> int:
     name = '查询分数'
     res = session.get(f'https://api.starnetwork.io/v3/game/{game}', timeout=300)
     if res.text.count('tournament'):
+        if not res.json().get('tournament'):
+            return 23333
         tournament_id = ''
         ids = res.json()['tournament']['_id']['id']['data']
         for data in ids:
@@ -35,7 +37,7 @@ def query_score(session: Session, game: str) -> int:
                     return int(score_str)
                 except:
                     continue
-            return 50000
+            return 23333
     return get_error(name, res)
 
 

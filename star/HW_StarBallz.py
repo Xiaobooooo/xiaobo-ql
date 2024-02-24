@@ -37,7 +37,7 @@ def query_score(session: Session, game: str) -> int:
                     return int(score_str)
                 except:
                     continue
-            return 23333
+        return 23333
     return get_error(name, res)
 
 

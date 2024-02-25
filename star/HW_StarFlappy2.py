@@ -36,6 +36,7 @@ class Task(QLTask):
                 break
             i += 1
             if i > 5:
+                i = 0
                 proxy = get_proxy(self.api_url, index)
                 session.proxies = {'https': proxy}
 

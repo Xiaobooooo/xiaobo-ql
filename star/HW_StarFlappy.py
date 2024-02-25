@@ -16,7 +16,7 @@ FILE_NAME = 'StarNetworkGameToken.txt'
 def game_record(session: Session, game: str, score: int) -> str:
     name = '完成游戏'
     payload = encrypt({"game": game, "mode": "tournament", "score": str(score), "extra": False}, True)
-    res = session.post('https://api.starnetwork.io/v3/game/record', json=payload, timeout=300)
+    res = session.post('https://api.starnetwork.io/v3/game/record', json=payload, timeout=15)
     if res.text.count('id') and res.text.count('SAVED'):
         return f'{name}[{game}]: 成功'
     if res.text.count('SAVED') or res.text.count('FAILED'):

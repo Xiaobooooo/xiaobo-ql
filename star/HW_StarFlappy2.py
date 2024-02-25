@@ -10,7 +10,7 @@ from HW_StarLogin import get_headers
 from HW_StarFlappy import game_record
 
 TASK_NAME = 'Star_Flappy_小号'
-FILE_NAME = 'StarNetworkGameToken2.txt'
+FILE_NAME = 'StarNetworkFlappyToken.txt'
 
 
 class Task(QLTask):

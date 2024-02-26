@@ -79,6 +79,8 @@ class Task(QLTask):
                 log.info(f'[{self.game}]当前第一名分数: {self.score}')
 
         score = self.score + random.randint(23333, 66666)
+        if score >= 730000:
+            score = 723333
         log.info(f'【{index}】随机分数: {score}')
 
         result = game_record(session, self.game, score)

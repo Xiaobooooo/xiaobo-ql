@@ -1,5 +1,5 @@
 """
-cron: 59 7 * * *
+cron: 57 59 7 * * *
 new Env('Star_Flappy')
 """
 import requests

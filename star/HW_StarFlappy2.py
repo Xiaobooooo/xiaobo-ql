@@ -2,6 +2,8 @@
 cron: 0 7 * * *
 new Env('Star_Flappy_小号')
 """
+import time
+
 import requests
 
 from common.task import QLTask, get_proxy
@@ -19,6 +21,7 @@ class Task(QLTask):
         super().__init__(task_name, file_name)
         self.thread_num = 30
         self.game = game
+        self.star_time = time.time()
 
     def task(self, index: int, text: str, proxy: str):
         split = text.split('----')
@@ -30,6 +33,8 @@ class Task(QLTask):
 
         i = 0
         while True:
+            if time.time() - self.star_time > 3600:
+                break
             result = game_record(session, self.game, 0)
             log.info(f'【{index}】{result}')
             if result.count('失败'):

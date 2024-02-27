@@ -9,11 +9,10 @@ from requests import Session
 
 from common.task import QLTask
 from common.util import log, lock
-from HW_StarFlappy import FILE_NAME
 from HW_StarLogin import get_headers, encrypt, get_error
 
 TASK_NAME = 'Star_Ballz'
-
+FILE_NAME = 'StarNetworkGameTokenBallz.txt'
 
 def query_score(session: Session, game: str) -> int:
     name = '查询分数'

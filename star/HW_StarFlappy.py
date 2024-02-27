@@ -10,7 +10,7 @@ from common.util import log
 from HW_StarLogin import get_error, encrypt, get_headers
 
 TASK_NAME = 'Star_Flappy'
-FILE_NAME = 'StarNetworkGameToken.txt'
+FILE_NAME = 'StarNetworkGameTokenFlappy.txt'
 
 
 def game_record(session: Session, game: str, score: int) -> str:

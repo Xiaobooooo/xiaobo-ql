@@ -1,5 +1,5 @@
 """
-cron: 0 8 * * *
+cron: 0 10 * * *
 new Env('Ulti-Pilot_Explore')
 """
 import time

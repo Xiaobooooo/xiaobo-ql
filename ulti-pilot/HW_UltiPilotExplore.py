@@ -4,6 +4,7 @@ new Env('Ulti-Pilot_Explore')
 """
 import time
 
+import requests
 from eth_account.messages import encode_defunct
 from eth_typing import ChecksumAddress
 from tls_client import Session
@@ -109,12 +110,15 @@ class Task(QLTask):
 
         headers = {
             'ul-auth-api-key': 'YWktYWdlbnRAZFd4MGFYWmxjbk5s',
+            'ul-auth-address': address,
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
             'Origin': 'https://pilot.ultiverse.io'
         }
-        session = get_chrome_session()
+        # session = get_chrome_session()
+        session = requests.Session()
         session.headers.update(headers)
-        session.proxies = proxy
+        # session.proxies = proxy
+        session.proxies = {'https': proxy}
 
         token = login(session, address, private_key)
         session.headers.update({'ul-auth-address': address, 'ul-auth-token': token})

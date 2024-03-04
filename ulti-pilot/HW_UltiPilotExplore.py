@@ -49,9 +49,9 @@ def query(session: Session) -> list:
 
 def explore(session: Session, world_ids: list, address: ChecksumAddress, private_key: str) -> (str, list, int):
     name = '浏览'
-    if len(world_ids) < 1:
-        return f'{name}: 暂无未浏览任务', [], -1
     while True:
+        if len(world_ids) < 1:
+            return f'{name}: 暂无未浏览任务', [], -1
         payload = {"worldIds": world_ids, "chainId": 204}
         res = session.post('https://pml.ultiverse.io/api/explore/sign', json=payload)
         if res.text.count('Insufficient soul point'):

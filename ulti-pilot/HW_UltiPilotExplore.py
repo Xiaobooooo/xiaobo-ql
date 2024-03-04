@@ -35,16 +35,27 @@ def login(session: Session, address: ChecksumAddress, private_key: str) -> str:
     return get_error_msg(name, res)
 
 
-def explore(session: Session, address: ChecksumAddress, private_key: str) -> (str, int):
+def query(session: Session) -> list:
+    name = '查询'
+    res = session.get('https://pml.ultiverse.io/api/explore/list')
+    world_ids = []
+    if res.text.count('success') and res.json().get('success'):
+        for data in res.json().get('data'):
+            if not data.get('explored'):
+                world_ids.append(data.get('worldId'))
+        return world_ids
+    get_error_msg(name, res)
+
+
+def explore(session: Session, world_ids: list, address: ChecksumAddress, private_key: str) -> (str, list, int):
     name = '浏览'
-    world_ids = ["Terminus", "BAC", "MetaMerge", "Cyber8Ball", "Moonlight", "CricketFly"]
     while True:
         payload = {"worldIds": world_ids, "chainId": 204}
         res = session.post('https://pml.ultiverse.io/api/explore/sign', json=payload)
         if res.text.count('Insufficient soul point'):
             world_ids.pop()
             time.sleep(10)
-        elif res.text.count('Request too frequent, try 10 seconds later'):
+        elif res.text.count('Request too frequent'):
             time.sleep(10)
         elif res.text.count('Already explored for Terminus'):
             return f'{name}: 今日已经浏览过了', -1
@@ -59,14 +70,16 @@ def explore(session: Session, address: ChecksumAddress, private_key: str) -> (st
         data = data_json.get('data')
         signature = data_json.get('signature')
         nonce = bsc.eth.get_transaction_count(address)
-
-        data = f'0x75278b5c00000000000000000000000000000000000000000000000000000000{hex(deadline).replace("0x", "")}0000000000000000000000000000000000000000000000000000000000{hex(voyage_id).replace("0x", "")}00000000000000000000000000000000000000000000000000000000000000a0{data.replace("0x", "")}00000000000000000000000000000000000000000000000000000000000000{hex(224 + (len(destinations) - 1)* 32).replace("0x","")}000000000000000000000000000000000000000000000000000000000000000{len(destinations)}{"".join([f"000000000000000000000000000000000000000000000000000000000000000{i}" for i in destinations])}0000000000000000000000000000000000000000000000000000000000000041{signature.replace("0x", "")}00000000000000000000000000000000000000000000000000000000000000'
+        destinations_hex = hex(224 + (len(destinations) - 1) * 32).replace("0x", "")
+        for i in range(64 - len(destinations_hex)):
+            destinations_hex = f'0{destinations_hex}'
+        data = f'0x75278b5c00000000000000000000000000000000000000000000000000000000{hex(deadline).replace("0x", "")}0000000000000000000000000000000000000000000000000000000000{hex(voyage_id).replace("0x", "")}00000000000000000000000000000000000000000000000000000000000000a0{data.replace("0x", "")}{destinations_hex}000000000000000000000000000000000000000000000000000000000000000{len(destinations)}{"".join([f"000000000000000000000000000000000000000000000000000000000000000{i}" for i in destinations])}0000000000000000000000000000000000000000000000000000000000000041{signature.replace("0x", "")}00000000000000000000000000000000000000000000000000000000000000'
         tx = {'from': address, 'to': contract, 'nonce': nonce, 'data': data, 'gasPrice': bsc.eth.gas_price, 'gas': 100000}
         bsc.eth.estimate_gas(tx)
         signed_tx = bsc.eth.account.sign_transaction(tx, private_key)
         transaction = bsc.eth.send_raw_transaction(signed_tx.rawTransaction)
         bsc.eth.wait_for_transaction_receipt(transaction)
-        return transaction.hex(), voyage_id
+        return transaction.hex(), world_ids, voyage_id
     return get_error_msg(name, res)
 
 
@@ -79,6 +92,14 @@ def check(session: Session, voyage_id: int) -> str:
 
 
 class Task(QLTask):
+    def __init__(self, task_name: str, file_name: str, is_delay: bool):
+        super().__init__(task_name, file_name, is_delay)
+        self.voyage_id_list = []
+        self.world_ids_list = []
+        for i in range(self.total):
+            self.world_ids_list.append([])
+            self.voyage_id_list.append(0)
+
     def task(self, index: int, text: str, proxy: str):
         split = text.split('----')
         address = bsc.to_checksum_address(split[0])
@@ -96,14 +117,20 @@ class Task(QLTask):
         token = login(session, address, private_key)
         session.headers.update({'ul-auth-address': address, 'ul-auth-token': token})
         log.info(f'【{index}】登录成功')
-        result, voyage_id = explore(session, address, private_key)
-        if voyage_id == -1:
-            log.info(f'【{index}】{result}')
-            return
-        log.info(f'【{index}】浏览交易Hash: {result}')
-        result = check(session, voyage_id)
+
+        if not self.world_ids_list[index - 1]:
+            world_ids = query(session)
+            self.world_ids_list[index - 1] = world_ids
+        if not self.voyage_id_list[index - 1]:
+            result, world_ids, voyage_id = explore(session, self.world_ids_list[index - 1], address, private_key)
+            if voyage_id == -1:
+                log.info(f'【{index}】{result}')
+                return
+            self.voyage_id_list[index - 1] = voyage_id
+            log.info(f'【{index}】{world_ids}浏览交易Hash: {result}')
+        result = check(session, self.voyage_id_list[index - 1])
         log.info(f'【{index}】{result}')
 
 
 if __name__ == '__main__':
-    Task(TASK_NAME, FILE_NAME, True).run()
+    Task(TASK_NAME, FILE_NAME, False).run()

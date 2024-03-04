@@ -88,10 +88,15 @@ def explore(session: Session, world_ids: list, address: ChecksumAddress, private
 
 def check(session: Session, voyage_id: int) -> str:
     name = '检测浏览'
-    res = session.get(f'https://pml.ultiverse.io/api/explore/check?id={voyage_id}&chainId=204')
-    if res.text.count('success'):
-        return f"{name}: {'成功' if res.json().get('data').get('success') else '失败'}"
-    return get_error_msg(name, res)
+    for i in range(3):
+        try:
+            res = session.get(f'https://pml.ultiverse.io/api/explore/check?id={voyage_id}&chainId=204')
+            if res.text.count('success'):
+                return f"{name}: {'成功' if res.json().get('data').get('success') else '失败'}"
+            return get_error_msg(name, res)
+        except Exception:
+            pass
+    raise Exception(f'{name}: 请求失败')
 
 
 class Task(QLTask):

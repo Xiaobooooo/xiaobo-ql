@@ -139,6 +139,7 @@ class Task(QLTask):
                 return
             self.voyage_id_list[index - 1] = voyage_id
             log.info(f'【{index}】{world_ids}浏览交易Hash: {result}')
+            time.sleep(3)
         result = check(session, self.voyage_id_list[index - 1])
         log.info(f'【{index}】{result}')
 

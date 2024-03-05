@@ -111,7 +111,7 @@ def get_proxy(api_url: str, index: int = None) -> str:
 
 
 class QLTask(metaclass=ABCMeta):
-    def __init__(self, task_name: str, file_name: str, is_delay: bool = False):
+    def __init__(self, task_name: str, file_name: str, is_delay: bool = False, delay_min: int = 233, delay_max: int = 3600):
         self.wait = 0
         self.success = 0
         self.task_name = task_name
@@ -120,7 +120,7 @@ class QLTask(metaclass=ABCMeta):
         self.fail_data = []
         self.notice = ''
         if is_delay:
-            delay = random.randint(233, 3600)
+            delay = random.randint(delay_min, delay_max)
             log.info(f'随机延迟{delay}秒后开始运行')
             time.sleep(delay)
         log.info('=====开始加载配置=====')

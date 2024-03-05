@@ -36,15 +36,23 @@ def login(session: Session, address: ChecksumAddress, private_key: str) -> str:
     return get_error_msg(name, res)
 
 
-def query(session: Session) -> list:
-    name = '查询'
+def query(session: Session) -> int:
+    name = '查询Soul'
+    res = session.get('https://pml.ultiverse.io/api/profile')
+    if res.text.count('success') and res.json().get('success'):
+        return int(int(res.json().get('data').get('soulInWallets')) / 1000000)
+    get_error_msg(name, res)
+
+
+def query_explore(session: Session) -> dict:
+    name = '查询探索'
     res = session.get('https://pml.ultiverse.io/api/explore/list')
-    world_ids = []
+    explore_list = {}
     if res.text.count('success') and res.json().get('success'):
         for data in res.json().get('data'):
             if not data.get('explored'):
-                world_ids.append(data.get('worldId'))
-        return world_ids
+                explore_list.update({data.get('worldId'): data.get('soul')})
+        return explore_list
     get_error_msg(name, res)
 
 
@@ -52,7 +60,7 @@ def explore(session: Session, world_ids: list, address: ChecksumAddress, private
     name = '浏览'
     while True:
         if len(world_ids) < 1:
-            return f'{name}: 暂无未浏览任务', [], -1
+            return f'{name}: 暂无可浏览任务', [], -1
         payload = {"worldIds": world_ids, "chainId": 204}
         res = session.post('https://pml.ultiverse.io/api/explore/sign', json=payload)
         if res.text.count('Insufficient soul point'):
@@ -100,11 +108,13 @@ def check(session: Session, voyage_id: int) -> str:
 
 
 class Task(QLTask):
-    def __init__(self, task_name: str, file_name: str, is_delay: bool):
-        super().__init__(task_name, file_name, is_delay)
+    def __init__(self, task_name: str, file_name: str, is_delay: bool, delay_min: int, delay_max: int):
+        super().__init__(task_name, file_name, is_delay, delay_min, delay_max)
+        self.soul_list = []
         self.voyage_id_list = []
         self.world_ids_list = []
         for i in range(self.total):
+            self.soul_list.append(0)
             self.world_ids_list.append([])
             self.voyage_id_list.append(0)
 
@@ -114,24 +124,45 @@ class Task(QLTask):
         private_key = split[1]
 
         headers = {
+            'Host': 'toolkit.ultiverse.io',
             'ul-auth-api-key': 'YWktYWdlbnRAZFd4MGFYWmxjbk5s',
-            'ul-auth-address': address,
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
             'Origin': 'https://pilot.ultiverse.io'
         }
-        # session = get_chrome_session()
-        session = requests.Session()
+        session = get_chrome_session()
+        # session = requests.Session()
         session.headers.update(headers)
-        # session.proxies = proxy
-        session.proxies = {'https': proxy}
+        session.proxies = proxy
+        # session.proxies = {'https': proxy}
 
         token = login(session, address, private_key)
-        session.headers.update({'ul-auth-address': address, 'ul-auth-token': token})
+        session.headers.update({'Host': 'pml.ultiverse.io', 'ul-auth-address': address, 'ul-auth-token': token})
         log.info(f'【{index}】登录成功')
 
+        if not self.soul_list[index - 1]:
+            soul = query(session)
+            self.soul_list[index - 1] = soul
+            log.info(f'【{index}】当前Soul: {soul}')
+
         if not self.world_ids_list[index - 1]:
-            world_ids = query(session)
+            my_soul = self.soul_list[index - 1]
+            world_ids = []
+            explore_list = query_explore(session)
+            for world_id, soul in explore_list.items():
+                if soul == 0:
+                    world_ids.append(world_id)
+                else:
+                    my_soul -= soul
+                    if my_soul >= 0:
+                        world_ids.append(world_id)
+                    else:
+                        break
+            if len(world_ids) < 1:
+                log.info(f'【{index}】暂无可浏览任务')
+                return
             self.world_ids_list[index - 1] = world_ids
+            log.info(f'【{index}】当前浏览: {world_ids}')
+
         if not self.voyage_id_list[index - 1]:
             result, world_ids, voyage_id = explore(session, self.world_ids_list[index - 1], address, private_key)
             if voyage_id == -1:
@@ -139,10 +170,10 @@ class Task(QLTask):
                 return
             self.voyage_id_list[index - 1] = voyage_id
             log.info(f'【{index}】{world_ids}浏览交易Hash: {result}')
-            time.sleep(3)
+            time.sleep(2.33)
         result = check(session, self.voyage_id_list[index - 1])
         log.info(f'【{index}】{result}')
 
 
 if __name__ == '__main__':
-    Task(TASK_NAME, FILE_NAME, False).run()
+    Task(TASK_NAME, FILE_NAME, True, 233, 2333).run()

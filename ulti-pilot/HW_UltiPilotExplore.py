@@ -85,11 +85,11 @@ def explore(session: Session, world_ids: list, address: ChecksumAddress, private
         for i in range(64 - len(destinations_hex)):
             destinations_hex = f'0{destinations_hex}'
         data = f'0x75278b5c00000000000000000000000000000000000000000000000000000000{hex(deadline).replace("0x", "")}0000000000000000000000000000000000000000000000000000000000{hex(voyage_id).replace("0x", "")}00000000000000000000000000000000000000000000000000000000000000a0{data.replace("0x", "")}{destinations_hex}000000000000000000000000000000000000000000000000000000000000000{len(destinations)}{"".join([f"000000000000000000000000000000000000000000000000000000000000000{i}" for i in destinations])}0000000000000000000000000000000000000000000000000000000000000041{signature.replace("0x", "")}00000000000000000000000000000000000000000000000000000000000000'
-        tx = {'from': address, 'to': contract, 'nonce': nonce, 'data': data, 'gasPrice': bsc.eth.gas_price, 'gas': 100000}
-        bsc.eth.estimate_gas(tx)
+        tx = {'from': address, 'to': contract, 'nonce': nonce, 'data': data, 'gasPrice': int(bsc.eth.gas_price * 1.2)}
+        tx['gas'] = bsc.eth.estimate_gas(tx)
         signed_tx = bsc.eth.account.sign_transaction(tx, private_key)
         transaction = bsc.eth.send_raw_transaction(signed_tx.rawTransaction)
-        bsc.eth.wait_for_transaction_receipt(transaction)
+        # bsc.eth.wait_for_transaction_receipt(transaction)
         return transaction.hex(), world_ids, voyage_id
     return get_error_msg(name, res)
 
@@ -110,10 +110,9 @@ def check(session: Session, voyage_id: int) -> str:
 class Task(QLTask):
     def __init__(self, task_name: str, file_name: str, is_delay: bool, delay_min: int, delay_max: int):
         super().__init__(task_name, file_name, is_delay, delay_min, delay_max)
-        self.soul_list = []
-        self.voyage_id_list = []
-        self.world_ids_list = []
+        self.token_list, self.soul_list, self.voyage_id_list, self.world_ids_list = [], [], [], []
         for i in range(self.total):
+            self.token_list.append('')
             self.soul_list.append(0)
             self.world_ids_list.append([])
             self.voyage_id_list.append(0)
@@ -135,9 +134,11 @@ class Task(QLTask):
         session.proxies = proxy
         # session.proxies = {'https': proxy}
 
-        token = login(session, address, private_key)
-        session.headers.update({'Host': 'pml.ultiverse.io', 'ul-auth-address': address, 'ul-auth-token': token})
-        log.info(f'【{index}】登录成功')
+        if not self.token_list[index - 1]:
+            token = login(session, address, private_key)
+            session.headers.update({'Host': 'pml.ultiverse.io', 'ul-auth-address': address, 'ul-auth-token': token})
+            log.info(f'【{index}】登录成功')
+            self.token_list[index - 1] = token
 
         if not self.soul_list[index - 1]:
             soul = query(session)
@@ -176,4 +177,4 @@ class Task(QLTask):
 
 
 if __name__ == '__main__':
-    Task(TASK_NAME, FILE_NAME, True, 233, 2333).run()
+    Task(TASK_NAME, FILE_NAME, False, 233, 2333).run()

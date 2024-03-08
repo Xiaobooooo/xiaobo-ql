@@ -177,4 +177,4 @@ class Task(QLTask):
 
 
 if __name__ == '__main__':
-    Task(TASK_NAME, FILE_NAME, False, 233, 2333).run()
+    Task(TASK_NAME, FILE_NAME, True, 233, 2333).run()

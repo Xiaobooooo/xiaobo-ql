@@ -1,5 +1,4 @@
-# Xiaobo-QL [![Twitter](https://img.shields.io/twitter/follow/0xiaobo)](https://twitter.com/intent/follow?screen_name=0xiaobo)
+# 本仓库停已止更新[![Twitter](https://img.shields.io/twitter/follow/0xiaobo)](https://twitter.com/intent/follow?screen_name=0xiaobo)
 
-## 低价推特账号
+# 有需要请前往新仓库[Xiaobo-Task-Public](https://github.com/Xiaobooooo/xiaobo-task-public)
 
-便宜Twitter|X令牌号(可定制昵称、关注项目方等)：[XiaoboFaka](https://www.xiaobofaka.xyz/)
